@@ -48,10 +48,11 @@ public Action:test(client, args)
 	if (oyun)
 	{
 		PrintToChatAll("true");
-		PrintToChatAll("%02d:%02d", sayim / 60, sayim % 60);
+		PrintToChatAll("%02d:%02d", dalgasuresi / 60, dalgasuresi % 60);
 	}
 	PrintToChatAll("%d", TakimdakiOyuncular(2));
 	PrintToChatAll("%d", TakimdakiOyuncular(3));
+	PrintToChatAll("%02d:%02d", sayim / 60, sayim % 60);
 }
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -123,8 +124,6 @@ public Action:oyun1(Handle:timer, any:id)
 			ServerCommand("mp_forcewin 2");
 		}
 	} else {
-		oyun = false;
-		sayim = 60;
 		if (TakimdakiOyuncular(3) > 1)
 		{
 			ServerCommand("mp_forcewin 3 ");
