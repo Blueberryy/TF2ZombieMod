@@ -92,7 +92,7 @@ public Action:hazirlik(Handle:timer, any:client)
 	sayim--;
 	if (sayim <= 60 && sayim > 0)
 	{
-		PrintHintTextToAll("Oyunun baþlamasýna::%02d:%02d", sayim / 60, sayim % 60);
+		PrintHintTextToAll("Oyunun baÃ¾lamasÃ½na::%02d:%02d", sayim / 60, sayim % 60);
 		dalgasuresi = 120;
 		oyun = false;
 		if (client > 0 && TF2_GetClientTeam(client) == TFTeam_Blue && zombiee)
@@ -110,7 +110,7 @@ public Action:oyun1(Handle:timer, any:id)
 	dalgasuresi--;
 	if (dalgasuresi <= 120 && dalgasuresi > 0 && oyun)
 	{
-		PrintHintTextToAll("Süre:%02d:%02d", dalgasuresi / 60, dalgasuresi % 60);
+		PrintHintTextToAll("SÃ¼re:%02d:%02d", dalgasuresi / 60, dalgasuresi % 60);
 		for (new i = 0; i <= MaxClients; i++)
 		{
 			if (IsClientInGame(i) && IsPlayerAlive(i) && id > 0)
@@ -139,7 +139,7 @@ rastgelezombi()
 {
 	new oyuncular[MAXPLAYERS + 1];
 	new num;
-	for (new i = 1; i <= MaxClients; i++)
+	for (new i = 0; i <= MaxClients; i++)
 	{
 		if (IsClientInGame(i) && TF2_GetClientTeam(i) != TFTeam_Spectator)
 		{
