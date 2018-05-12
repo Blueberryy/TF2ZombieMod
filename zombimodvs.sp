@@ -48,17 +48,16 @@ public Action:test(client, args)
 	if (oyun)
 	{
 		PrintToChatAll("true");
-		PrintToChatAll("%02d:%02d", dalgasuresi / 60, dalgasuresi % 60);
+		PrintToChatAll("%02d:%02d", sayim / 60, sayim % 60);
 	}
 	PrintToChatAll("%d", TakimdakiOyuncular(2));
 	PrintToChatAll("%d", TakimdakiOyuncular(3));
-	PrintToChatAll("%02d:%02d", sayim / 60, sayim % 60);
 }
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	oyun = false;
 	sayim = 60;
-	dalgasuresi = 120;
+	dalgasuresi = 480;
 }
 public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -94,7 +93,7 @@ public Action:hazirlik(Handle:timer, any:client)
 	if (sayim <= 60 && sayim > 0)
 	{
 		PrintHintTextToAll("Oyunun başlamasına::%02d:%02d", sayim / 60, sayim % 60);
-		dalgasuresi = 120;
+		dalgasuresi = 480;
 		oyun = false;
 		if (client > 0 && TF2_GetClientTeam(client) == TFTeam_Blue && zombiee)
 		{
@@ -109,24 +108,30 @@ public Action:hazirlik(Handle:timer, any:client)
 public Action:oyun1(Handle:timer, any:id)
 {
 	dalgasuresi--;
-	if (dalgasuresi <= 120 && dalgasuresi > 0 && oyun)
+	if (dalgasuresi <= 480 && dalgasuresi > 0 && oyun)
 	{
 		PrintHintTextToAll("Süre:%02d:%02d", dalgasuresi / 60, dalgasuresi % 60);
+		/*
 		for (new i = 0; i <= MaxClients; i++)
 		{
 			if (IsClientInGame(i) && IsPlayerAlive(i) && id > 0)
 			{
-				discizgi(i, true);
+				SetEntProp(i, Prop_Send, "m_bGlowEnabled", 1);
 			}
 		}
-		if (TakimdakiOyuncular(3) == 0) //2 red 3 blue
-		{
-			ServerCommand("mp_forcewin 2");
-		}
-	} else {
-		if (TakimdakiOyuncular(3) > 1)
+		*/
+		if (TakimdakiOyuncular(2) == 0) //2 red 3 blue
 		{
 			ServerCommand("mp_forcewin 3 ");
+			ServerCommand("mp_restartgame 5");
+		}
+	}
+	else if (dalgasuresi <= 0 && oyun)
+	{
+		if (TakimdakiOyuncular(2) > 0)
+		{
+			ServerCommand("mp_forcewin 2 ");
+			ServerCommand("mp_restartgame 5");
 		}
 	}
 }
@@ -184,13 +189,4 @@ TakimdakiOyuncular(iTakim)
 		}
 	}
 	return iSayi;
-}
-discizgi(client, bool:ekle = true)
-{
-	if (ekle)
-	{
-		SetEntProp(client, Prop_Send, "m_bGlowEnabled", 1);
-	} else {
-		SetEntProp(client, Prop_Send, "m_bGlowEnabled", 0);
-	}
 } 
