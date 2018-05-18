@@ -36,6 +36,8 @@ public OnPluginStart()
 	RegConsoleCmd("sm_test", test);
 	CreateTimer(1.0, hazirlik, _, TIMER_REPEAT);
 	CreateTimer(1.0, oyun1, _, TIMER_REPEAT);
+	CreateTimer(15.0, yazi1, _, TIMER_REPEAT);
+	CreateTimer(25.0, yazi2, _, TIMER_REPEAT);
 	HookEvent("teamplay_round_start", round);
 	HookEvent("player_death", death);
 	HookEvent("player_spawn", spawn);
@@ -85,7 +87,7 @@ public Action:death(Handle:event, const String:name[], bool:dontBroadcast)
 		if (oyun)
 		{
 			zombi(victim);
-			HUD(-1.0, 0.2, 6.0, 255, 255, 255, 2, "%N", victim);
+			HUD(-1.0, 0.2, 6.0, 255, 0, 0, 2, "\n\n%N", victim);
 		}
 	}
 }
@@ -96,7 +98,9 @@ public Action:hazirlik(Handle:timer, any:client)
 	if (sayim <= 60 && sayim > 0)
 	{
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Hazırlık:%02d:%02d", sayim / 60, sayim % 60);
-		PrintHintTextToAll("Oyunun başlamasına::%02d:%02d", sayim / 60, sayim % 60);
+		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "Z O M B I:%d", TakimdakiOyuncular(3));
+		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "I N S A N:%d", TakimdakiOyuncular(2));
+		//PrintHintTextToAll("Oyunun başlamasına::%02d:%02d", sayim / 60, sayim % 60);
 		dalgasuresi = 480;
 		oyun = false;
 		if (client > 0 && TF2_GetClientTeam(client) == TFTeam_Blue && zombiee)
@@ -115,7 +119,8 @@ public Action:oyun1(Handle:timer, any:id)
 	if (dalgasuresi <= 480 && dalgasuresi > 0 && oyun)
 	{
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Süre:%02d:%02d", dalgasuresi / 60, dalgasuresi % 60);
-		PrintHintTextToAll("Süre:%02d:%02d", dalgasuresi / 60, dalgasuresi % 60);
+		HUD(0.02, 0.02, 1.0, 255, 255, 0, 6, "Zombiler:%d", TakimdakiOyuncular(2));
+		HUD(-0.02, 0.02, 1.0, 255, 255, 0, 6, "Insanlar:%d", TakimdakiOyuncular(3));
 		for (new i = 1; i <= MaxClients; i++)
 		{
 			if (IsClientInGame(i) && IsPlayerAlive(i))
@@ -221,4 +226,16 @@ HUD(Float:x, Float:y, Float:Sure, r, g, b, kanal, const String:message[], any:..
 			ShowHudText(i, kanal, buffer);
 		}
 	}
+}
+
+/*
+---------------------CHAT TEXTLERİ---------------------
+*/
+public Action:yazi1(Handle:timer, any:id)
+{
+	PrintToChatAll("[TF2Z]Hazırlık süresi 60 saniyedir.");
+}
+public Action:yazi2(Handle:timer, any:id)
+{
+	PrintToChatAll("[TF2Z]Hayatta kalmaya çalışın!");
 } 
