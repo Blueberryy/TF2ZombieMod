@@ -41,17 +41,19 @@ public OnPluginStart()
 	HookEvent("player_spawn", spawn);
 	ServerCommand("mp_autoteambalance 0");
 	ServerCommand("mp_teams_unbalance_limit 0");
+	ServerCommand("mp_respawnwavetime 0 ");
+	ServerCommand("mp_restartgame 1 ");
 }
 
 public Action:test(client, args)
 {
 	if (oyun)
 	{
-		PrintToChatAll("true");
-		PrintToChatAll("%02d:%02d", sayim / 60, sayim % 60);
+		PrintToChatAll("Oyun:true");
+		PrintToChatAll("Hazırlık:%02d:%02d", sayim / 60, sayim % 60);
 	}
-	PrintToChatAll("%d", TakimdakiOyuncular(2));
-	PrintToChatAll("%d", TakimdakiOyuncular(3));
+	PrintToChatAll("Red:%d", TakimdakiOyuncular(2));
+	PrintToChatAll("Blue:%d", TakimdakiOyuncular(3));
 }
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -83,6 +85,7 @@ public Action:death(Handle:event, const String:name[], bool:dontBroadcast)
 		if (oyun)
 		{
 			zombi(victim);
+			HUD(-1.0, 0.2, 6.0, 255, 255, 255, 2, "%N", victim);
 		}
 	}
 }
@@ -92,6 +95,7 @@ public Action:hazirlik(Handle:timer, any:client)
 	sayim--;
 	if (sayim <= 60 && sayim > 0)
 	{
+		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Hazırlık:%02d:%02d", sayim / 60, sayim % 60);
 		PrintHintTextToAll("Oyunun başlamasına::%02d:%02d", sayim / 60, sayim % 60);
 		dalgasuresi = 480;
 		oyun = false;
@@ -110,28 +114,27 @@ public Action:oyun1(Handle:timer, any:id)
 	dalgasuresi--;
 	if (dalgasuresi <= 480 && dalgasuresi > 0 && oyun)
 	{
+		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Süre:%02d:%02d", dalgasuresi / 60, dalgasuresi % 60);
 		PrintHintTextToAll("Süre:%02d:%02d", dalgasuresi / 60, dalgasuresi % 60);
-		/*
-		for (new i = 0; i <= MaxClients; i++)
+		for (new i = 1; i <= MaxClients; i++)
 		{
-			if (IsClientInGame(i) && IsPlayerAlive(i) && id > 0)
+			if (IsClientInGame(i) && IsPlayerAlive(i))
 			{
 				SetEntProp(i, Prop_Send, "m_bGlowEnabled", 1);
 			}
 		}
-		*/
 		if (TakimdakiOyuncular(2) == 0) //2 red 3 blue
 		{
-			ServerCommand("mp_forcewin 3 ");
-			ServerCommand("mp_restartgame 5");
+			kazanantakim(3);
+			ServerCommand("mp_restartgame 7 ");
 		}
 	}
 	else if (dalgasuresi <= 0 && oyun)
 	{
 		if (TakimdakiOyuncular(2) > 0)
 		{
-			ServerCommand("mp_forcewin 2 ");
-			ServerCommand("mp_restartgame 5");
+			kazanantakim(2);
+			ServerCommand("mp_restartgame 7 ");
 		}
 	}
 }
@@ -189,4 +192,33 @@ TakimdakiOyuncular(iTakim)
 		}
 	}
 	return iSayi;
+}
+kazanantakim(takim)
+{
+	new client = GetClientOfUserId(client);
+	new ent = FindEntityByClassname(-1, "game_round_win");
+	if (ent < 1)
+	{
+		ent = CreateEntityByName("game_round_win");
+		if (IsValidEntity(ent))
+		{
+			DispatchSpawn(ent);
+		}
+		SetVariantInt(takim);
+		AcceptEntityInput(ent, "SetTeam");
+		AcceptEntityInput(ent, "RoundWin");
+	}
+}
+HUD(Float:x, Float:y, Float:Sure, r, g, b, kanal, const String:message[], any:...)
+{
+	SetHudTextParams(x, y, Sure, r, g, b, 255, 0, 6.0, 0.1, 0.2);
+	new String:buffer[256];
+	VFormat(buffer, sizeof(buffer), message, 9);
+	for (new i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i))
+		{
+			ShowHudText(i, kanal, buffer);
+		}
+	}
 } 
