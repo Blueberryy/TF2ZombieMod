@@ -119,8 +119,8 @@ public Action:oyun1(Handle:timer, any:id)
 	if (dalgasuresi <= 480 && dalgasuresi > 0 && oyun)
 	{
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Süre:%02d:%02d", dalgasuresi / 60, dalgasuresi % 60);
-		HUD(0.02, 0.02, 1.0, 255, 255, 0, 6, "Zombiler:%d", TakimdakiOyuncular(2));
-		HUD(-0.02, 0.02, 1.0, 255, 255, 0, 6, "Insanlar:%d", TakimdakiOyuncular(3));
+		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "Z O M B I:%d", TakimdakiOyuncular(3));
+		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "I N S A N:%d", TakimdakiOyuncular(2));
 		for (new i = 1; i <= MaxClients; i++)
 		{
 			if (IsClientInGame(i) && IsPlayerAlive(i))
