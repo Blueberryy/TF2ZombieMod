@@ -17,7 +17,7 @@
 new bool:oyun;
 new sayim;
 new dalgasuresi;
-new bool:zombiee;
+//new bool:zombiee; gereksiz
 //new dalga;
 //new maxdalga = 10;
 // red insan
@@ -87,7 +87,7 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (TF2_GetClientTeam(client) == TFTeam_Blue)
 	{
-		zombiee = true;
+		//zombiee = true; gereksiz
 		SetEntityHealth(client, 390);
 		SetEntityRenderColor(client, 0, 255, 0, 0);
 		if(!oyun && sayim > 0 && sayim <= 30)
@@ -95,7 +95,7 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 			TF2_ChangeClientTeam(client, TFTeam_Red);
 		}
 	} else {
-		zombiee = false;
+		//zombiee = false; gereksiz
 		SetEntityRenderColor(client, 255, 255, 255, 0);
 	}
 }
@@ -154,6 +154,10 @@ public Action:oyun1(Handle:timer, any:id)
 		{
 			kazanantakim(3);
 			ServerCommand("mp_restartgame 7 ");
+		}
+		else if(TakimdakiOyuncular(2) == 1)
+		{
+		  HUD(-1.0, 0.2, 6.0, 255, 255, 255, 1, "TEK KİŞİ KALDI!");
 		}
 	}
 	else if (dalgasuresi <= 0 && oyun)
