@@ -4,6 +4,7 @@
 
 #define PLUGIN_AUTHOR "steamId=crackersarenoice"
 #define PLUGIN_VERSION "0.10"
+#define sarkir01 "left4fortress/rabies01.mp3"
 
 #include <sourcemod>
 #include <sdktools>
@@ -22,14 +23,17 @@ new bool:zombiee;
 // red insan
 
 
-public Plugin:myinfo = 
+public Plugin:myinfo =
 {
-	name = "", 
-	author = PLUGIN_AUTHOR, 
-	description = "", 
-	version = PLUGIN_VERSION, 
+	name = "",
+	author = PLUGIN_AUTHOR,
+	description = "",
+	version = PLUGIN_VERSION,
 	url = ""
 };
+public OnMapStart()
+{
+}
 
 public OnPluginStart()
 {
@@ -41,11 +45,26 @@ public OnPluginStart()
 	HookEvent("teamplay_round_start", round);
 	HookEvent("player_death", death);
 	HookEvent("player_spawn", spawn);
+	//HookEvent("player_team", team);
 	ServerCommand("mp_autoteambalance 0");
 	ServerCommand("mp_teams_unbalance_limit 0");
 	ServerCommand("mp_respawnwavetime 0 ");
 	ServerCommand("mp_restartgame 1 ");
 }
+
+/*
+public Action:team(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	new id = GetClientOfUserId(GetEventInt(event, "userid"));
+	if(!oyun && sayim > 0)
+	{
+		if(TF2_GetClientTeam(id) == TFTeam_Blue)
+		{
+			TF2_ChangeClientTeam(id, TFTeam_Red);
+		}
+	}
+}
+*/
 
 public Action:test(client, args)
 {
@@ -60,8 +79,8 @@ public Action:test(client, args)
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	oyun = false;
-	sayim = 60;
-	dalgasuresi = 480;
+	sayim = 30;
+	dalgasuresi = 350;
 }
 public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -69,11 +88,12 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 	if (TF2_GetClientTeam(client) == TFTeam_Blue)
 	{
 		zombiee = true;
-		if (!oyun)
+		SetEntityHealth(client, 390);
+		SetEntityRenderColor(client, 0, 255, 0, 0);
+		if(!oyun && sayim > 0 && sayim <= 30)
 		{
 			TF2_ChangeClientTeam(client, TFTeam_Red);
 		}
-		SetEntityRenderColor(client, 0, 255, 0, 0);
 	} else {
 		zombiee = false;
 		SetEntityRenderColor(client, 255, 255, 255, 0);
@@ -95,18 +115,20 @@ public Action:death(Handle:event, const String:name[], bool:dontBroadcast)
 public Action:hazirlik(Handle:timer, any:client)
 {
 	sayim--;
-	if (sayim <= 60 && sayim > 0)
+	if (sayim <= 30 && sayim > 0)
 	{
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Hazırlık:%02d:%02d", sayim / 60, sayim % 60);
 		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "Z O M B I:%d", TakimdakiOyuncular(3));
 		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "I N S A N:%d", TakimdakiOyuncular(2));
 		//PrintHintTextToAll("Oyunun başlamasına::%02d:%02d", sayim / 60, sayim % 60);
-		dalgasuresi = 480;
+		dalgasuresi = 350;
 		oyun = false;
+		/*
 		if (client > 0 && TF2_GetClientTeam(client) == TFTeam_Blue && zombiee)
 		{
 			TF2_ChangeClientTeam(client, TFTeam_Red);
 		}
+		*/
 	} else {
 		oyun = true;
 		zombi(rastgelezombi());
@@ -116,7 +138,7 @@ public Action:hazirlik(Handle:timer, any:client)
 public Action:oyun1(Handle:timer, any:id)
 {
 	dalgasuresi--;
-	if (dalgasuresi <= 480 && dalgasuresi > 0 && oyun)
+	if (dalgasuresi <= 350 && dalgasuresi > 0 && oyun)
 	{
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Süre:%02d:%02d", dalgasuresi / 60, dalgasuresi % 60);
 		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "Z O M B I:%d", TakimdakiOyuncular(3));
@@ -200,18 +222,15 @@ TakimdakiOyuncular(iTakim)
 }
 kazanantakim(takim)
 {
-	new client = GetClientOfUserId(client);
-	new ent = FindEntityByClassname(-1, "game_round_win");
-	if (ent < 1)
+	new ent = FindEntityByClassname(-1, "team_control_point_master"); //game_round_win
+	if (ent == -1) // < 1  ya da == -1
 	{
-		ent = CreateEntityByName("game_round_win");
-		if (IsValidEntity(ent))
-		{
-			DispatchSpawn(ent);
-		}
+		ent = CreateEntityByName("team_control_point_master");
+		DispatchSpawn(ent);
+	} else {
 		SetVariantInt(takim);
-		AcceptEntityInput(ent, "SetTeam");
-		AcceptEntityInput(ent, "RoundWin");
+		//AcceptEntityInput(ent, "Enable");SetTeam
+		AcceptEntityInput(ent, "SetWinner");
 	}
 }
 HUD(Float:x, Float:y, Float:Sure, r, g, b, kanal, const String:message[], any:...)
@@ -238,4 +257,8 @@ public Action:yazi1(Handle:timer, any:id)
 public Action:yazi2(Handle:timer, any:id)
 {
 	PrintToChatAll("[TF2Z]Hayatta kalmaya çalışın!");
-} 
+}
+
+/*
+-------------------ŞARKILAR-----------------------------
+*/
