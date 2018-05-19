@@ -273,12 +273,33 @@ public Action:yazi2(Handle:timer, any:id)
 -------------------ZOMBİ KAÇIŞ BÖLÜMÜ-------------------
 */
 
-zombikacis()
+zombikacis(bool:zombikacis = true, id)
 {
 	decl String:map[256];
 	GetCurrentMap(map, sizeof(map));
 	if(strcmp("ze_%s", map))
 	{
-		PrintToChatAll("[TF2Z]HARİTANIN ZE OLDUĞU ALGILANDI.ZE MODU AKTİFLEŞTİRİLDİ!.");
+		PrintToChatAll("[TF2Z]Ze modu aktifleştirildi.");
+		if(TakimdakiOyuncular(3) > 0)
+		{
+			id = TakimdakiOyuncular(3);
+			SetEntProp(id, Prop_Data, "m_iHealth", 500);
+			SetEntProp(id, Prop_Send, "m_iMaxHealth", 500);
+		}
+		else if(TF2_GetClientTeam(client) == TFTeam_Red)
+		{
+		  switch(TF2_GetPlayerClass(client))
+		  {
+		    case TFClass_Medic:
+		    {
+		      SetEntProp(id, Prop_Data, "m_iHealth", 90);
+					SetEntProp(id_ Prop_Send, "m_iMaxHealth", 90);
+		    }
+
+		  }
+		}
+	} else {
+		LogError("[TF2Z]Zombie Escape Modu etkinleştirilmedi. Harita uygun değil.");
+		zombikacis = false;
 	}
 }
