@@ -23,12 +23,12 @@ new dalgasuresi;
 // red insan
 
 
-public Plugin:myinfo =
+public Plugin:myinfo = 
 {
-	name = "",
-	author = PLUGIN_AUTHOR,
-	description = "",
-	version = PLUGIN_VERSION,
+	name = "", 
+	author = PLUGIN_AUTHOR, 
+	description = "", 
+	version = PLUGIN_VERSION, 
 	url = ""
 };
 public OnMapStart()
@@ -91,7 +91,7 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 		//zombiee = true; gereksiz
 		SetEntityHealth(client, 390);
 		SetEntityRenderColor(client, 0, 255, 0, 0);
-		if(!oyun && sayim > 0 && sayim <= 30)
+		if (!oyun && sayim > 0 && sayim <= 30)
 		{
 			TF2_ChangeClientTeam(client, TFTeam_Red);
 		}
@@ -156,9 +156,9 @@ public Action:oyun1(Handle:timer, any:id)
 			kazanantakim(3);
 			ServerCommand("mp_restartgame 7 ");
 		}
-		else if(TakimdakiOyuncular(2) == 1)
+		else if (TakimdakiOyuncular(2) == 1)
 		{
-		  HUD(-1.0, 0.2, 6.0, 255, 255, 255, 1, "TEK KİŞİ KALDI!");
+			HUD(-1.0, 0.2, 6.0, 255, 255, 255, 1, "TEK KİŞİ KALDI!");
 		}
 	}
 	else if (dalgasuresi <= 0 && oyun)
@@ -273,33 +273,36 @@ public Action:yazi2(Handle:timer, any:id)
 -------------------ZOMBİ KAÇIŞ BÖLÜMÜ-------------------
 */
 
-zombikacis(bool:zombikacis = true, id)
+zombikacis()
 {
+	new id = GetClientOfUserId(id);
+	new bool:zombikaciss;
 	decl String:map[256];
 	GetCurrentMap(map, sizeof(map));
-	if(strcmp("ze_%s", map))
+	if (strcmp("ze_%s", map))
 	{
+		zombikaciss = true;
 		PrintToChatAll("[TF2Z]Ze modu aktifleştirildi.");
-		if(TakimdakiOyuncular(3) > 0)
+		if (TakimdakiOyuncular(3) > 0)
 		{
 			id = TakimdakiOyuncular(3);
 			SetEntProp(id, Prop_Data, "m_iHealth", 500);
 			SetEntProp(id, Prop_Send, "m_iMaxHealth", 500);
 		}
-		else if(TF2_GetClientTeam(client) == TFTeam_Red)
+		else if (TF2_GetClientTeam(id) == TFTeam_Red)
 		{
-		  switch(TF2_GetPlayerClass(client))
-		  {
-		    case TFClass_Medic:
-		    {
-		      SetEntProp(id, Prop_Data, "m_iHealth", 90);
-		      SetEntProp(id_ Prop_Send, "m_iMaxHealth", 90);
-		    }
-
-		  }
+			switch (TF2_GetPlayerClass(id))
+			{
+				case TFClass_Medic:
+				{
+					SetEntProp(id, Prop_Data, "m_iHealth", 90);
+					SetEntProp(id, Prop_Send, "m_iMaxHealth", 90);
+				}
+				
+			}
 		}
 	} else {
 		LogError("[TF2Z]Zombie Escape Modu etkinleştirilmedi. Harita uygun değil.");
-		zombikacis = false;
+		zombikaciss = false;
 	}
 }
