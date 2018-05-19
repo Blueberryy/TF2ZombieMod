@@ -293,7 +293,7 @@ zombikacis(bool:zombikacis = true, id)
 		    case TFClass_Medic:
 		    {
 		      SetEntProp(id, Prop_Data, "m_iHealth", 90);
-					SetEntProp(id_ Prop_Send, "m_iMaxHealth", 90);
+		      SetEntProp(id_ Prop_Send, "m_iMaxHealth", 90);
 		    }
 
 		  }
