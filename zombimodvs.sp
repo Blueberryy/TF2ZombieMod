@@ -75,6 +75,7 @@ public Action:test(client, args)
 	}
 	PrintToChatAll("Red:%d", TakimdakiOyuncular(2));
 	PrintToChatAll("Blue:%d", TakimdakiOyuncular(3));
+	zombikacis();
 }
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -266,3 +267,18 @@ public Action:yazi2(Handle:timer, any:id)
 /*
 -------------------ŞARKILAR-----------------------------
 */
+
+
+/*
+-------------------ZOMBİ KAÇIŞ BÖLÜMÜ-------------------
+*/
+
+zombikacis()
+{
+	decl String:map[256];
+	GetCurrentMap(map, sizeof(map));
+	if(strcmp("ze_%s", map))
+	{
+		PrintToChatAll("[TF2Z]HARİTANIN ZE OLDUĞU ALGILANDI.ZE MODU AKTİFLEŞTİRİLDİ!.");
+	}
+}
