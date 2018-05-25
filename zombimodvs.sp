@@ -56,6 +56,7 @@ public OnPluginStart()
 	ServerCommand("mp_teams_unbalance_limit 0");
 	ServerCommand("mp_respawnwavetime 0 ");
 	ServerCommand("mp_restartgame 1 ");
+	ServerCommand("mp_disable_respawn_times 1 ");
 }
 
 /*
@@ -238,7 +239,10 @@ zombi(client)
 {
 	if (client > 0)
 	{
-		TF2_ChangeClientTeam(client, TFTeam_Blue);
+		SetEntProp(client, Prop_Send, "m_lifeState", 2);
+		ChangeClientTeam(client, 3);
+		SetEntProp(client, Prop_Send, "m_lifeState", 0);
+		//TF2_ChangeClientTeam(client, TFTeam_Blue);
 	}
 	CreateTimer(0.1, silah, client, TIMER_FLAG_NO_MAPCHANGE);
 }
