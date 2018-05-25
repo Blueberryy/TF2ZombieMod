@@ -13,7 +13,8 @@
 #include <sdkhooks>
 
 
-
+//new Handle:zm_tDalgasuresi = INVALID_HANDLE;
+//new Handle:zm_tHazirliksuresi = INVALID_HANDLE;
 new bool:oyun;
 new sayim;
 new dalgasuresi;
@@ -21,7 +22,8 @@ new dalgasuresi;
 //new dalga;
 //new maxdalga = 10;
 // red insan
-
+//pozisyon
+new Float:xpoz[MAXPLAYERS + 1][3];
 
 public Plugin:myinfo = 
 {
@@ -34,7 +36,11 @@ public Plugin:myinfo =
 public OnMapStart()
 {
 }
-
+public OnClientPutInServer(id)
+{
+	SDKHook(id, SDKHook_OnTakeDamage, OnTakeDamage);
+	xpoz[id][0] = 0.0, xpoz[id][1] = 0.0, xpoz[id][2] = 0.0;
+}
 public OnPluginStart()
 {
 	RegConsoleCmd("sm_test", test);
@@ -75,7 +81,7 @@ public Action:test(client, args)
 	}
 	PrintToChatAll("Red:%d", TakimdakiOyuncular(2));
 	PrintToChatAll("Blue:%d", TakimdakiOyuncular(3));
-	zombikacis();
+	//zombikacis();
 }
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -85,6 +91,7 @@ public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 }
 public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
+	decl target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (TF2_GetClientTeam(client) == TFTeam_Blue)
 	{
@@ -95,14 +102,45 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 		{
 			TF2_ChangeClientTeam(client, TFTeam_Red);
 		}
+		
+		else if (oyun && dalgasuresi > 0 && dalgasuresi < 350)
+		{
+			zombi(client);
+			if (xpoz[client][0] != 0.0 && xpoz[client][1] != 0.0 && xpoz[client][2] != 0.0)
+			{
+				TeleportEntity(client, xpoz[client], NULL_VECTOR, NULL_VECTOR);
+				SetEntProp(client, Prop_Send, "m_bDucked", 1);
+				xpoz[client][0] = 0.0, xpoz[client][1] = 0.0, xpoz[client][2] = 0.0;
+			}
+		}
+		
 	} else {
 		//zombiee = false; gereksiz
 		SetEntityRenderColor(client, 255, 255, 255, 0);
+	}
+	if (TF2_GetClientTeam(client) == TFTeam_Red)
+	{
+		switch (TF2_GetPlayerClass(client))
+		{
+			case TFClass_Engineer:
+			{
+				TF2_RemoveWeaponSlot(client, 3);
+				/*
+				for (new i = 0; i <= target_count; i++)
+				{
+					new iEnt = -1;
+					iEnt = FindEntityByClassname(iEnt, "obj_sentrygun");
+					AcceptEntityInput(iEnt, "kill");
+			    }
+			    */
+			}
+		}
 	}
 }
 public Action:death(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new victim = GetClientOfUserId(GetEventInt(event, "userid"));
+	/*
 	if (TF2_GetClientTeam(victim) == TFTeam_Red)
 	{
 		if (oyun)
@@ -111,8 +149,18 @@ public Action:death(Handle:event, const String:name[], bool:dontBroadcast)
 			HUD(-1.0, 0.2, 6.0, 255, 0, 0, 2, "\n\n%N", victim);
 		}
 	}
+	*/
+	CreateTimer(0.3, dogus, victim, TIMER_FLAG_NO_MAPCHANGE);
 }
-
+public Action:dogus(Handle:timer, any:id)
+{
+	if (TF2_GetClientTeam(id) == TFTeam_Red && oyun)
+	{
+		zombi(id);
+		GetClientAbsOrigin(id, xpoz[id]);
+		HUD(-1.0, 0.2, 6.0, 255, 0, 0, 2, "\n\n%N", id);
+	}
+}
 public Action:hazirlik(Handle:timer, any:client)
 {
 	sayim--;
@@ -158,7 +206,7 @@ public Action:oyun1(Handle:timer, any:id)
 		}
 		else if (TakimdakiOyuncular(2) == 1)
 		{
-			HUD(-1.0, 0.2, 6.0, 255, 255, 255, 1, "TEK KİŞİ KALDI!");
+			//HUD(-1.0, 0.2, 6.0, 255, 255, 255, 1, "\n\n\nTEK KİŞİ KALDI!");
 		}
 	}
 	else if (dalgasuresi <= 0 && oyun)
@@ -204,7 +252,7 @@ public Action:silah(Handle:timer, any:client)
 			TF2_RemoveWeaponSlot(client, i);
 		}
 	}
-	if (client > 0)
+	if (client > 0 && TF2_GetClientTeam(client) == TFTeam_Blue)
 	{
 		new silah1 = GetPlayerWeaponSlot(client, 2);
 		if (IsValidEdict(silah1))
@@ -257,13 +305,16 @@ HUD(Float:x, Float:y, Float:Sure, r, g, b, kanal, const String:message[], any:..
 */
 public Action:yazi1(Handle:timer, any:id)
 {
-	PrintToChatAll("[TF2Z]Hazırlık süresi 60 saniyedir.");
+	PrintToChatAll("[TF2Z]Hazırlık süresi 30(varsayılan) saniyedir.");
 }
 public Action:yazi2(Handle:timer, any:id)
 {
 	PrintToChatAll("[TF2Z]Hayatta kalmaya çalışın!");
 }
-
+public Action:OnTakeDamage(id, &attacker, &inflictor, &Float:damage, &damagetype, &weapon, Float:damageForce[3], Float:damagePosition[3])
+{
+	//
+}
 /*
 -------------------ŞARKILAR-----------------------------
 */
@@ -306,3 +357,4 @@ zombikacis()
 		zombikaciss = false;
 	}
 }
+
