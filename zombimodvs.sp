@@ -11,15 +11,18 @@
 #include <tf2>
 #include <tf2_stocks>
 #include <sdkhooks>
+#include <clientprefs>
 
 
 //new Handle:zm_tDalgasuresi = INVALID_HANDLE;
 //new Handle:zm_tHazirliksuresi = INVALID_HANDLE;
+new Handle:MusicCookie;
 new bool:oyun;
 new sayim;
 new dalgasuresi;
 new bool:kazanan;
 new bool:deneme = false;
+new bool:oyuncumuzik;
 //new bool:zombiee; gereksiz
 //new dalga;
 //new maxdalga = 10;
@@ -45,11 +48,13 @@ public OnClientPutInServer(id)
 }
 public OnPluginStart()
 {
+	RegConsoleCmd("sm_msc", msc);
 	RegConsoleCmd("sm_test", test);
 	CreateTimer(1.0, hazirlik, _, TIMER_REPEAT);
 	CreateTimer(1.0, oyun1, _, TIMER_REPEAT);
-	CreateTimer(15.0, yazi1, _, TIMER_REPEAT);
-	CreateTimer(25.0, yazi2, _, TIMER_REPEAT);
+	CreateTimer(60.0, yazi1, _, TIMER_REPEAT);
+	CreateTimer(120.0, yazi2, _, TIMER_REPEAT);
+	CreateTimer(90.0, yazi3, _, TIMER_REPEAT);
 	HookEvent("teamplay_round_start", round);
 	HookEvent("player_death", death);
 	HookEvent("player_spawn", spawn);
@@ -61,8 +66,28 @@ public OnPluginStart()
 	ServerCommand("mp_respawnwavetime 0 ");
 	ServerCommand("mp_restartgame 1 ");
 	ServerCommand("mp_disable_respawn_times 1 ");
+	MusicCookie = RegClientCookie("oyuncu_mzk_ayarı", "Muzik Ayarı", CookieAccess_Public);
 }
-
+public mzk(Handle hMuzik, MenuAction action, client, item)
+{
+	if (action == MenuAction_Select)
+	{
+		switch (item)
+		{
+			case 0:
+			{
+				MuzikAc(client);
+				OyuncuMuzikAyari(client, true);
+			}
+			
+			case 1:
+			{
+				MuzikDurdurma(client);
+				OyuncuMuzikAyari(client, false);
+			}
+		}
+	}
+}
 /*
 public Action:team(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -76,7 +101,16 @@ public Action:team(Handle:event, const String:name[], bool:dontBroadcast)
 	}
 }
 */
-
+public Action:msc(client, args)
+{
+	Menu hMuzik = new Menu(mzk);
+	hMuzik.SetTitle("Müzik bölmesi");
+	hMuzik.AddItem("Aç", "Aç");
+	hMuzik.AddItem("Kapa", "Kapa");
+	hMuzik.ExitButton = false;
+	hMuzik.Display(client, 20);
+	
+}
 public Action:test(client, args)
 {
 	if (oyun)
@@ -317,6 +351,10 @@ public Action:yazi2(Handle:timer, any:id)
 {
 	PrintToChatAll("[TF2Z]Hayatta kalmaya çalışın!");
 }
+public Action:yazi3(Handle:timer, any:id)
+{
+	PrintToChatAll("[TF2Z]Oyun içi müzikleri açmak veya kapatmak için [!msc] yazabilirsiniz.");
+}
 public Action:OnTakeDamage(id, &attacker, &inflictor, &Float:damage, &damagetype, &weapon, Float:damageForce[3], Float:damagePosition[3])
 {
 	//
@@ -404,5 +442,50 @@ izleyicikontrolu()
 				PrintToChat(i, "[TF2Z]Oyun Başlarken İzleyici Mod'a geçilemez");
 			}
 		}
+	}
+}
+MuzikDurdurma(client)
+{
+	//StopSound(client, SNDCHAN_AUTO, snd1);
+	PrintToChat(client, "[TF2Z]Müzikler durduruldu.");
+}
+MuzikAc(client)
+{
+	//sesler = true;
+	PrintToChat(client, "[TF2Z]Müzikler açıldı.");
+}
+//vsh
+/*
+SetClientSoundOptions(client, excepttype, bool:on)
+{
+	if (!IsValidClient(client)) return;
+	if (IsFakeClient(client)) return;
+	if (!AreClientCookiesCached(client)) return;
+	new String:strCookie[32];
+	if (on) strCookie = "1";
+	else strCookie = "0";
+	if (excepttype == SOUNDEXCEPT_VOICE) SetClientCookie(client, VoiceCookie, strCookie);
+	else SetClientCookie(client, MusicCookie, strCookie);
+}
+*/
+OyuncuMuzikAyari(client, bool:acik)
+{
+	if (!IsClientInGame(client))
+	{
+		return;
+	}
+	if (IsFakeClient(client))
+	{
+		return;
+	}
+	new String:strCookie[32];
+	if (acik)
+	{
+		strCookie = "1";
+		PrintToChat(client, "acik");
+	} else {
+		strCookie = "0";
+		PrintToChat(client, "kapali");
+		SetClientCookie(client, MusicCookie, strCookie);
 	}
 } 
