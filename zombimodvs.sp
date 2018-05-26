@@ -18,6 +18,7 @@
 new bool:oyun;
 new sayim;
 new dalgasuresi;
+new bool:kazanan;
 //new bool:zombiee; gereksiz
 //new dalga;
 //new maxdalga = 10;
@@ -89,6 +90,7 @@ public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 	oyun = false;
 	sayim = 30;
 	dalgasuresi = 350;
+	kazanan = false;
 }
 public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -102,6 +104,7 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 		if (!oyun && sayim > 0 && sayim <= 30)
 		{
 			TF2_ChangeClientTeam(client, TFTeam_Red);
+			PrintToChat(client, "[TF2Z]Oyun Başlamadan Zombi Olamazsın!");
 		}
 		
 		else if (oyun && dalgasuresi > 0 && dalgasuresi < 350)
@@ -181,7 +184,10 @@ public Action:hazirlik(Handle:timer, any:client)
 		*/
 	} else {
 		oyun = true;
-		zombi(rastgelezombi());
+		if (TakimdakiOyuncular(3) == 0)
+		{
+			zombi(rastgelezombi());
+		}
 	}
 }
 
@@ -203,7 +209,8 @@ public Action:oyun1(Handle:timer, any:id)
 		if (TakimdakiOyuncular(2) == 0) //2 red 3 blue
 		{
 			kazanantakim(3);
-			ServerCommand("mp_restartgame 7 ");
+			//ServerCommand("mp_restartgame 7 ");
+			oyunuresetle();
 		}
 		else if (TakimdakiOyuncular(2) == 1)
 		{
@@ -215,24 +222,25 @@ public Action:oyun1(Handle:timer, any:id)
 		if (TakimdakiOyuncular(2) > 0)
 		{
 			kazanantakim(2);
-			ServerCommand("mp_restartgame 7 ");
+			//kazanan = true;
+			//ServerCommand("mp_restartgame 7 ");
+			oyunuresetle();
 		}
 	}
 }
 
-rastgelezombi()
+stock rastgelezombi()
 {
-	new oyuncular[MAXPLAYERS + 1];
-	new num;
+	new oyuncular[MaxClients + 1], num;
 	for (new i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientInGame(i) && TF2_GetClientTeam(i) != TFTeam_Spectator)
+		if (IsClientInGame(i) && GetClientTeam(i) > 1)
 		{
 			oyuncular[num++] = i;
 		}
-		return oyuncular[GetRandomInt(0, num - 1)];
+		//return oyuncular[GetRandomInt(0, num - 1)];
 	}
-	return 0;
+	return (num == 0) ? 0 : oyuncular[GetRandomInt(0, num - 1)];
 }
 
 zombi(client)
@@ -287,6 +295,7 @@ kazanantakim(takim)
 	} else {
 		SetVariantInt(takim);
 		//AcceptEntityInput(ent, "Enable");SetTeam
+		kazanan = true;
 		AcceptEntityInput(ent, "SetWinner");
 	}
 }
@@ -361,4 +370,36 @@ zombikacis()
 		zombikaciss = false;
 	}
 }
-
+//mp_restartgame'dan daha çabuk yöntem.
+oyunuresetle()
+{
+	//new id = TakimdakiOyuncular(2);
+	//new id1 = TakimdakiOyuncular(3);
+	//new oyuncu[MaxClients + 1], num;
+	if (kazanan)
+	{
+		CreateTimer(15.0, res, _, TIMER_FLAG_NO_MAPCHANGE);
+		/*
+		for (new i = 1; i <= MaxClients; i++)
+		{
+			if (IsClientInGame(i) && GetClientTeam(i) == 3)
+			{
+				oyuncu[num++] = i;
+				ChangeClientTeam(i, 2);
+			}
+		}
+		*/
+	}
+}
+public Action:res(Handle:timer, any:id)
+{
+	new oyuncu[MaxClients + 1], num;
+	for (new i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && GetClientTeam(i) == 3)
+		{
+			oyuncu[num++] = i;
+			ChangeClientTeam(i, 2);
+		}
+	}
+} 
