@@ -49,7 +49,7 @@ public OnClientPutInServer(id)
 public OnPluginStart()
 {
 	RegConsoleCmd("sm_msc", msc);
-	RegConsoleCmd("sm_test", test);
+	//RegConsoleCmd("sm_test", test);  bu arkadaşa şuanlık ihtiyaç yok.
 	CreateTimer(1.0, hazirlik, _, TIMER_REPEAT);
 	CreateTimer(1.0, oyun1, _, TIMER_REPEAT);
 	CreateTimer(60.0, yazi1, _, TIMER_REPEAT);
@@ -111,6 +111,7 @@ public Action:msc(client, args)
 	hMuzik.Display(client, 20);
 	
 }
+/*
 public Action:test(client, args)
 {
 	if (oyun)
@@ -120,8 +121,9 @@ public Action:test(client, args)
 	}
 	PrintToChatAll("Red:%d", TakimdakiOyuncular(2));
 	PrintToChatAll("Blue:%d", TakimdakiOyuncular(3));
-	//zombikacis();
+	zombikacis();
 }
+*/
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	//new client = GetClientOfUserId(GetEventInt(event, "userid"));
