@@ -19,6 +19,7 @@ new bool:oyun;
 new sayim;
 new dalgasuresi;
 new bool:kazanan;
+new bool:deneme = false; //şuanlık
 //new bool:zombiee; gereksiz
 //new dalga;
 //new maxdalga = 10;
@@ -87,6 +88,7 @@ public Action:test(client, args)
 }
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 {
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	oyun = false;
 	sayim = 30;
 	dalgasuresi = 350;
@@ -140,6 +142,18 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 			}
 		}
 	}
+	//izleyici kontrolü
+	/*
+	else if(TF2_GetClientTeam(client) == TFTeam_Spectator)
+	{
+		if(!oyun && sayim > 0)
+		{
+			ChangeClientTeam(client, 2);
+	    } else {
+	    	ChangeClientTeam(client, 3);
+	    }
+    }
+    */
 }
 public Action:death(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -170,6 +184,7 @@ public Action:hazirlik(Handle:timer, any:client)
 	sayim--;
 	if (sayim <= 30 && sayim > 0)
 	{
+		izleyicikontrolu();
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Hazırlık:%02d:%02d", sayim / 60, sayim % 60);
 		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "Z O M B I:%d", TakimdakiOyuncular(3));
 		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "I N S A N:%d", TakimdakiOyuncular(2));
@@ -196,6 +211,7 @@ public Action:oyun1(Handle:timer, any:id)
 	dalgasuresi--;
 	if (dalgasuresi <= 350 && dalgasuresi > 0 && oyun)
 	{
+		izleyicikontrolu();
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Süre:%02d:%02d", dalgasuresi / 60, dalgasuresi % 60);
 		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "Z O M B I:%d", TakimdakiOyuncular(3));
 		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "I N S A N:%d", TakimdakiOyuncular(2));
@@ -343,7 +359,7 @@ zombikacis()
 	new bool:zombikaciss;
 	decl String:map[256];
 	GetCurrentMap(map, sizeof(map));
-	if (strcmp("ze_%s", map))
+	if (strcmp("ze_%s", map) && deneme)
 	{
 		zombikaciss = true;
 		PrintToChatAll("[TF2Z]Ze modu aktifleştirildi.");
@@ -400,6 +416,26 @@ public Action:res(Handle:timer, any:id)
 		{
 			oyuncu[num++] = i;
 			ChangeClientTeam(i, 2);
+		}
+	}
+}
+izleyicikontrolu()
+{
+	//new id = GetClientOfUserId(id);
+	new oyuncular[MaxClients + 1], num;
+	for (new i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && GetClientTeam(i) == 1)
+		{
+			oyuncular[num++] = i;
+			if (!oyun && sayim > 0)
+			{
+				ChangeClientTeam(i, 2);
+				PrintToChat(i, "[TF2Z]Oyun Başlarken İzleyici Mod'a geçilemez");
+			} else {
+				ChangeClientTeam(i, 3);
+				PrintToChat(i, "[TF2Z]Oyun Başlarken İzleyici Mod'a geçilemez");
+			}
 		}
 	}
 } 
