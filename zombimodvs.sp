@@ -61,17 +61,6 @@ public OnPluginStart()
 	ServerCommand("mp_respawnwavetime 0 ");
 	ServerCommand("mp_restartgame 1 ");
 	ServerCommand("mp_disable_respawn_times 1 ");
-	//ÖNERİLMEYEN AYARLAR
-	/*
-	ServerCommand("sm_cvar weapon_medigun_charge_rate 30"); // Locked
-    ServerCommand("sm_cvar weapon_medigun_chargerelease_rate 6"); // Locked
-    ServerCommand("sm_cvar tf_max_health_boost 1.25"); // Locked
-    ServerCommand("sm_cvar tf_boost_drain_time 3600"); // Locked
-    // Spy
-    ServerCommand("sm_cvar tf_spy_invis_time 0.5"); // Locked 
-    ServerCommand("sm_cvar tf_spy_invis_unstealth_time 0.75"); // Locked 
-    ServerCommand("sm_cvar tf_spy_cloak_no_attack_time 1.0");
-    */
 }
 
 /*
@@ -124,6 +113,7 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 		
 		else if (oyun && dalgasuresi > 0 && dalgasuresi < 350)
 		{
+			SetEntityRenderColor(client, 0, 255, 0, 0);
 			zombi(client);
 			if (xpoz[client][0] != 0.0 && xpoz[client][1] != 0.0 && xpoz[client][2] != 0.0)
 			{
@@ -144,29 +134,9 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 			case TFClass_Engineer:
 			{
 				//TF2_RemoveWeaponSlot(client, 3);
-				/*
-				for (new i = 0; i <= target_count; i++)
-				{
-					new iEnt = -1;
-					iEnt = FindEntityByClassname(iEnt, "obj_sentrygun");
-					AcceptEntityInput(iEnt, "kill");
-			    }
-			    */
 			}
 		}
 	}
-	//izleyici kontrolü
-	/*
-	else if(TF2_GetClientTeam(client) == TFTeam_Spectator)
-	{
-		if(!oyun && sayim > 0)
-		{
-			ChangeClientTeam(client, 2);
-	    } else {
-	    	ChangeClientTeam(client, 3);
-	    }
-    }
-    */
 }
 public Action:death(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -204,12 +174,6 @@ public Action:hazirlik(Handle:timer, any:client)
 		//PrintHintTextToAll("Oyunun başlamasına::%02d:%02d", sayim / 60, sayim % 60);
 		dalgasuresi = 350;
 		oyun = false;
-		/*
-		if (client > 0 && TF2_GetClientTeam(client) == TFTeam_Blue && zombiee)
-		{
-			TF2_ChangeClientTeam(client, TFTeam_Red);
-		}
-		*/
 	} else {
 		oyun = true;
 		if (TakimdakiOyuncular(3) == 0)
@@ -408,16 +372,6 @@ oyunuresetle()
 	if (kazanan)
 	{
 		CreateTimer(15.0, res, _, TIMER_FLAG_NO_MAPCHANGE);
-		/*
-		for (new i = 1; i <= MaxClients; i++)
-		{
-			if (IsClientInGame(i) && GetClientTeam(i) == 3)
-			{
-				oyuncu[num++] = i;
-				ChangeClientTeam(i, 2);
-			}
-		}
-		*/
 	}
 }
 public Action:res(Handle:timer, any:id)
