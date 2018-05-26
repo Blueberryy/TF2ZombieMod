@@ -444,10 +444,10 @@ izleyicikontrolu()
 			if (!oyun && sayim > 0)
 			{
 				ChangeClientTeam(i, 2);
-				PrintToChat(id, "[TF2Z]Oyun Başlarken İzleyici Mod'a geçilemez");
+				PrintToChat(i, "[TF2Z]Oyun Başlarken İzleyici Mod'a geçilemez");
 			} else {
 				ChangeClientTeam(i, 3);
-				PrintToChat(id, "[TF2Z]Oyun Başlarken İzleyici Mod'a geçilemez");
+				PrintToChat(i, "[TF2Z]Oyun Başlarken İzleyici Mod'a geçilemez");
 			}
 		}
 	}
