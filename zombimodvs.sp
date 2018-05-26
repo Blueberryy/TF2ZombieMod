@@ -19,7 +19,7 @@ new bool:oyun;
 new sayim;
 new dalgasuresi;
 new bool:kazanan;
-new bool:deneme = false; //şuanlık
+new bool:deneme = false;
 //new bool:zombiee; gereksiz
 //new dalga;
 //new maxdalga = 10;
@@ -54,11 +54,24 @@ public OnPluginStart()
 	HookEvent("player_death", death);
 	HookEvent("player_spawn", spawn);
 	//HookEvent("player_team", team);
+	ServerCommand("sm_cvar tf_obj_upgrade_per_hit 0");
+	ServerCommand("sm_cvar tf_sentrygun_metal_per_shell 201");
 	ServerCommand("mp_autoteambalance 0");
 	ServerCommand("mp_teams_unbalance_limit 0");
 	ServerCommand("mp_respawnwavetime 0 ");
 	ServerCommand("mp_restartgame 1 ");
 	ServerCommand("mp_disable_respawn_times 1 ");
+	//ÖNERİLMEYEN AYARLAR
+	/*
+	ServerCommand("sm_cvar weapon_medigun_charge_rate 30"); // Locked
+    ServerCommand("sm_cvar weapon_medigun_chargerelease_rate 6"); // Locked
+    ServerCommand("sm_cvar tf_max_health_boost 1.25"); // Locked
+    ServerCommand("sm_cvar tf_boost_drain_time 3600"); // Locked
+    // Spy
+    ServerCommand("sm_cvar tf_spy_invis_time 0.5"); // Locked 
+    ServerCommand("sm_cvar tf_spy_invis_unstealth_time 0.75"); // Locked 
+    ServerCommand("sm_cvar tf_spy_cloak_no_attack_time 1.0");
+    */
 }
 
 /*
@@ -88,7 +101,7 @@ public Action:test(client, args)
 }
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	//new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	oyun = false;
 	sayim = 30;
 	dalgasuresi = 350;
@@ -96,7 +109,7 @@ public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 }
 public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	decl target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+	//decl target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (TF2_GetClientTeam(client) == TFTeam_Blue)
 	{
@@ -130,7 +143,7 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 		{
 			case TFClass_Engineer:
 			{
-				TF2_RemoveWeaponSlot(client, 3);
+				//TF2_RemoveWeaponSlot(client, 3);
 				/*
 				for (new i = 0; i <= target_count; i++)
 				{
@@ -421,7 +434,7 @@ public Action:res(Handle:timer, any:id)
 }
 izleyicikontrolu()
 {
-	//new id = GetClientOfUserId(id);
+	new id = GetClientOfUserId(id);
 	new oyuncular[MaxClients + 1], num;
 	for (new i = 1; i <= MaxClients; i++)
 	{
@@ -431,10 +444,10 @@ izleyicikontrolu()
 			if (!oyun && sayim > 0)
 			{
 				ChangeClientTeam(i, 2);
-				PrintToChat(i, "[TF2Z]Oyun Başlarken İzleyici Mod'a geçilemez");
+				PrintToChat(id, "[TF2Z]Oyun Başlarken İzleyici Mod'a geçilemez");
 			} else {
 				ChangeClientTeam(i, 3);
-				PrintToChat(i, "[TF2Z]Oyun Başlarken İzleyici Mod'a geçilemez");
+				PrintToChat(id, "[TF2Z]Oyun Başlarken İzleyici Mod'a geçilemez");
 			}
 		}
 	}
