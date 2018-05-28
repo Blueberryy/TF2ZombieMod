@@ -75,6 +75,7 @@ public OnPluginStart()
 	ServerCommand("sm_cvar mp_waitingforplayers_time 0");
 	MusicCookie = RegClientCookie("oyuncu_mzk_ayari", "Muzik Ayarı", CookieAccess_Public);
 	AddCommandListener(hook_JoinClass, "joinclass");
+	AddCommandListener(BlockedCommands, "autoteam");
 }
 public mzk(Handle hMuzik, MenuAction action, client, item)
 {
@@ -95,6 +96,10 @@ public mzk(Handle hMuzik, MenuAction action, client, item)
 			}
 		}
 	}
+}
+public Action:BlockedCommands(client, const String:command[], argc)
+{
+	return Plugin_Handled;
 }
 public Action:hook_JoinClass(client, const String:command[], argc)
 {
