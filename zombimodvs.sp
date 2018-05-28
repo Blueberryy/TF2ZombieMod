@@ -5,6 +5,10 @@
 #define PLUGIN_AUTHOR "steamId=crackersarenoice"
 #define PLUGIN_VERSION "0.10"
 #define sarkir01 "left4fortress/rabies01.mp3"
+#define PLAYERBUILTOBJECT_ID_DISPENSER 0
+#define PLAYERBUILTOBJECT_ID_TELENT    1
+#define PLAYERBUILTOBJECT_ID_TELEXIT   2
+#define PLAYERBUILTOBJECT_ID_SENTRY    3
 
 #include <sourcemod>
 #include <sdktools>
@@ -49,7 +53,7 @@ public OnClientPutInServer(id)
 public OnPluginStart()
 {
 	RegConsoleCmd("sm_msc", msc);
-	//RegConsoleCmd("sm_test", test);  bu arkadaşa şuanlık ihtiyaç yok.
+	RegConsoleCmd("sm_test", test);
 	CreateTimer(1.0, hazirlik, _, TIMER_REPEAT);
 	CreateTimer(1.0, oyun1, _, TIMER_REPEAT);
 	CreateTimer(60.0, yazi1, _, TIMER_REPEAT);
@@ -58,6 +62,7 @@ public OnPluginStart()
 	HookEvent("teamplay_round_start", round);
 	HookEvent("player_death", death);
 	HookEvent("player_spawn", spawn);
+	HookEvent("player_builtobject", event_PlayerBuiltObject);
 	//HookEvent("player_team", team);
 	ServerCommand("sm_cvar tf_obj_upgrade_per_hit 0");
 	ServerCommand("sm_cvar tf_sentrygun_metal_per_shell 201");
@@ -66,7 +71,8 @@ public OnPluginStart()
 	ServerCommand("mp_respawnwavetime 0 ");
 	ServerCommand("mp_restartgame 1 ");
 	ServerCommand("mp_disable_respawn_times 1 ");
-	MusicCookie = RegClientCookie("oyuncu_mzk_ayarı", "Muzik Ayarı", CookieAccess_Public);
+	MusicCookie = RegClientCookie("oyuncu_mzk_ayari", "Muzik Ayarı", CookieAccess_Public);
+	AddCommandListener(hook_JoinClass, "joinclass");
 }
 public mzk(Handle hMuzik, MenuAction action, client, item)
 {
@@ -87,6 +93,29 @@ public mzk(Handle hMuzik, MenuAction action, client, item)
 			}
 		}
 	}
+}
+public Action:hook_JoinClass(client, const String:command[], argc)
+{
+	if(dalgasuresi > 0 && oyun && TF2_GetClientTeam(client) != TFTeam_Blue)
+	{
+		PrintToChat(client, "[TF2Z]Oyun esnasında sınıf değiştiremezsin!");
+		return Plugin_Handled;
+    }
+    return Plugin_Continue;
+}
+public Action:event_PlayerBuiltObject(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	new index1 = GetEventInt(event, "index");
+	new object1 = GetEventInt(event, "object");
+	if(object1 == PLAYERBUILTOBJECT_ID_DISPENSER)
+	{
+		SetEntProp(index1, Prop_Send, "m_bDisabled", 1);
+		SetEntProp(index1, Prop_Send, "m_iMaxHealth", 250);
+    }
+    else if(object1 == PLAYERBUILTOBJECT_ID_SENTRY)
+    {
+    	AcceptEntityInput(index1, "Kill");
+    }
 }
 /*
 public Action:team(Handle:event, const String:name[], bool:dontBroadcast)
@@ -111,7 +140,6 @@ public Action:msc(client, args)
 	hMuzik.Display(client, 20);
 	
 }
-/*
 public Action:test(client, args)
 {
 	if (oyun)
@@ -121,9 +149,8 @@ public Action:test(client, args)
 	}
 	PrintToChatAll("Red:%d", TakimdakiOyuncular(2));
 	PrintToChatAll("Blue:%d", TakimdakiOyuncular(3));
-	zombikacis();
+	//zombikacis();
 }
-*/
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	//new client = GetClientOfUserId(GetEventInt(event, "userid"));
@@ -177,16 +204,6 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 public Action:death(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new victim = GetClientOfUserId(GetEventInt(event, "userid"));
-	/*
-	if (TF2_GetClientTeam(victim) == TFTeam_Red)
-	{
-		if (oyun)
-		{
-			zombi(victim);
-			HUD(-1.0, 0.2, 6.0, 255, 0, 0, 2, "\n\n%N", victim);
-		}
-	}
-	*/
 	CreateTimer(0.3, dogus, victim, TIMER_FLAG_NO_MAPCHANGE);
 }
 public Action:dogus(Handle:timer, any:id)
@@ -195,7 +212,7 @@ public Action:dogus(Handle:timer, any:id)
 	{
 		zombi(id);
 		GetClientAbsOrigin(id, xpoz[id]);
-		HUD(-1.0, 0.2, 6.0, 255, 0, 0, 2, "\n\n%N", id);
+		HUD(-1.0, 0.2, 6.0, 255, 0, 0, 2, "\n☠☠☠\n%N", id);
 	}
 }
 public Action:hazirlik(Handle:timer, any:client)
@@ -205,7 +222,7 @@ public Action:hazirlik(Handle:timer, any:client)
 	{
 		izleyicikontrolu();
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Hazırlık:%02d:%02d", sayim / 60, sayim % 60);
-		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "Z O M B I:%d", TakimdakiOyuncular(3));
+		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "☠Z O M B I☠:%d", TakimdakiOyuncular(3));
 		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "I N S A N:%d", TakimdakiOyuncular(2));
 		//PrintHintTextToAll("Oyunun başlamasına::%02d:%02d", sayim / 60, sayim % 60);
 		dalgasuresi = 350;
@@ -226,7 +243,7 @@ public Action:oyun1(Handle:timer, any:id)
 	{
 		izleyicikontrolu();
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Süre:%02d:%02d", dalgasuresi / 60, dalgasuresi % 60);
-		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "Z O M B I:%d", TakimdakiOyuncular(3));
+		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "☠Z O M B I☠:%d", TakimdakiOyuncular(3));
 		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "I N S A N:%d", TakimdakiOyuncular(2));
 		for (new i = 1; i <= MaxClients; i++)
 		{
