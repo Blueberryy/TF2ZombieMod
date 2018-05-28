@@ -44,6 +44,7 @@ public Plugin:myinfo =
 };
 public OnMapStart()
 {
+	zombimod();
 }
 public OnClientPutInServer(id)
 {
@@ -71,6 +72,7 @@ public OnPluginStart()
 	ServerCommand("mp_respawnwavetime 0 ");
 	ServerCommand("mp_restartgame 1 ");
 	ServerCommand("mp_disable_respawn_times 1 ");
+	ServerCommand("sm_cvar mp_waitingforplayers_time 0");
 	MusicCookie = RegClientCookie("oyuncu_mzk_ayari", "Muzik Ayarı", CookieAccess_Public);
 	AddCommandListener(hook_JoinClass, "joinclass");
 }
@@ -96,26 +98,26 @@ public mzk(Handle hMuzik, MenuAction action, client, item)
 }
 public Action:hook_JoinClass(client, const String:command[], argc)
 {
-	if(dalgasuresi > 0 && oyun && TF2_GetClientTeam(client) != TFTeam_Blue)
+	if (dalgasuresi > 0 && oyun && TF2_GetClientTeam(client) != TFTeam_Blue)
 	{
 		PrintToChat(client, "[TF2Z]Oyun esnasında sınıf değiştiremezsin!");
 		return Plugin_Handled;
-    }
-    return Plugin_Continue;
+	}
+	return Plugin_Continue;
 }
 public Action:event_PlayerBuiltObject(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new index1 = GetEventInt(event, "index");
 	new object1 = GetEventInt(event, "object");
-	if(object1 == PLAYERBUILTOBJECT_ID_DISPENSER)
+	if (object1 == PLAYERBUILTOBJECT_ID_DISPENSER)
 	{
 		SetEntProp(index1, Prop_Send, "m_bDisabled", 1);
 		SetEntProp(index1, Prop_Send, "m_iMaxHealth", 250);
-    }
-    else if(object1 == PLAYERBUILTOBJECT_ID_SENTRY)
-    {
-    	AcceptEntityInput(index1, "Kill");
-    }
+	}
+	else if (object1 == PLAYERBUILTOBJECT_ID_SENTRY)
+	{
+		AcceptEntityInput(index1, "Kill");
+	}
 }
 /*
 public Action:team(Handle:event, const String:name[], bool:dontBroadcast)
@@ -130,6 +132,7 @@ public Action:team(Handle:event, const String:name[], bool:dontBroadcast)
 	}
 }
 */
+//----------------------MENU HANDLE------------------------------------------
 public Action:msc(client, args)
 {
 	Menu hMuzik = new Menu(mzk);
@@ -140,15 +143,16 @@ public Action:msc(client, args)
 	hMuzik.Display(client, 20);
 	
 }
+///////////////////////////////////////////////////////////////////////////////
 public Action:test(client, args)
 {
 	if (oyun)
 	{
-		PrintToChatAll("Oyun:true");
-		PrintToChatAll("Hazırlık:%02d:%02d", sayim / 60, sayim % 60);
+		PrintToChat(client, "Oyun:true");
+		PrintToChat(client, "Hazırlık:%02d:%02d", sayim / 60, sayim % 60);
 	}
-	PrintToChatAll("Red:%d", TakimdakiOyuncular(2));
-	PrintToChatAll("Blue:%d", TakimdakiOyuncular(3));
+	PrintToChat(client, "Red:%d", TakimdakiOyuncular(2));
+	PrintToChat(client, "Blue:%d", TakimdakiOyuncular(3));
 	//zombikacis();
 }
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
@@ -158,6 +162,7 @@ public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 	sayim = 30;
 	dalgasuresi = 350;
 	kazanan = false;
+	zombimod();
 }
 public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -180,6 +185,7 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 			zombi(client);
 			if (xpoz[client][0] != 0.0 && xpoz[client][1] != 0.0 && xpoz[client][2] != 0.0)
 			{
+				//Doğduğu yerde zombi olması. ya da zombi olduğu yerde doğması.
 				TeleportEntity(client, xpoz[client], NULL_VECTOR, NULL_VECTOR);
 				SetEntProp(client, Prop_Send, "m_bDucked", 1);
 				xpoz[client][0] = 0.0, xpoz[client][1] = 0.0, xpoz[client][2] = 0.0;
@@ -196,6 +202,7 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 		{
 			case TFClass_Engineer:
 			{
+				//Escape modunda engineerler built yapamazlar.
 				//TF2_RemoveWeaponSlot(client, 3);
 			}
 		}
@@ -386,7 +393,25 @@ public Action:OnTakeDamage(id, &attacker, &inflictor, &Float:damage, &damagetype
 /*
 -------------------ZOMBİ KAÇIŞ BÖLÜMÜ-------------------
 */
-
+zombimod()
+{
+	new ent = FindEntityByClassname(MaxClients + 1, "team_round_timer");
+	if (ent == -1)
+	{
+		return;
+	}
+	decl String:mapv[256];
+	GetCurrentMap(mapv, sizeof(mapv));
+	if (strcmp("zf_%s", mapv))
+	{
+		CreateTimer(1.0, Timer_SetTime, ent, TIMER_FLAG_NO_MAPCHANGE);
+	}
+}
+public Action:Timer_SetTime(Handle:timer, any:ent)
+{
+	SetVariantInt(380); // 600 sec ~ 10min
+	AcceptEntityInput(ent, "SetTime");
+}
 zombikacis()
 {
 	new id = GetClientOfUserId(id);
