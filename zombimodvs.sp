@@ -85,6 +85,7 @@ public OnPluginStart()
 	CreateTimer(1.0, oyun1, _, TIMER_REPEAT);
 	CreateTimer(160.0, yazi1, _, TIMER_REPEAT);
 	CreateTimer(120.0, yazi2, _, TIMER_REPEAT);
+	CreateTimer(120.0, yazi4, _, TIMER_REPEAT);
 	CreateTimer(190.0, yazi3, _, TIMER_REPEAT);
 	HookEvent("teamplay_round_start", round);
 	HookEvent("player_death", death);
@@ -135,7 +136,10 @@ public panel_HandleMain(Handle:menu, MenuAction:action, param1, param2)
 			{
 				Yardim(param1);
 			}
-			//case 2: panel_PrintPrefs(param1);
+			case 3:
+            {
+	            Yapimcilar(param1);
+            }
 			//case 3: panel_PrintCredits(param1);	  
 			default:return;
 		}
@@ -495,6 +499,10 @@ public Action:yazi3(Handle:timer, any:id)
 {
 	PrintToChatAll("[TF2Z]Oyun içi müzikleri açmak veya kapatmak için [!msc] yazabilirsiniz.");
 }
+public Action:yazi4(Handle:timer, any:id)
+{
+	PrintToChatAll("[TF2Z]Oyun hakkında bilgi için [!menu] yazabilirsiniz.");
+}
 //buglı
 
 public Action:OnTakeDamage(id, &attacker, &inflictor, &Float:damage, &damagetype, &weapon, Float:damageForce[3], Float:damagePosition[3])
@@ -766,6 +774,7 @@ public HakkindaK(client)
 	DrawPanelText(panel, "Insanlar bu bitmek bilmeyen salgında hayatta kalmalıdır.");
 	DrawPanelText(panel, "Eğer insan infekte(ölürse) zombi olur.");
 	DrawPanelText(panel, "----------------------------------------------");
+	DrawPanelText(panel, "Modu Kodlayan:steamId=crackersarenoice - Deniz");
 	DrawPanelItem(panel, "Yardım menüsüne geri dön.");
 	DrawPanelItem(panel, "Kapat");
 	SendPanelToClient(panel, client, panel_HandleOverview, 10);
@@ -782,3 +791,12 @@ public panel_HandleOverview(Handle:menu, MenuAction:action, param1, param2)
 		}
 	}
 } 
+public Yapimcilar(client)
+{
+	new Handle:panel = CreatePanel();
+	
+	SetPanelTitle(panel, "Yapimci");
+	DrawPanelText(panel, "Kodlayan:steamId=crackersarenoice");
+	DrawPanelItem(panel, "Kapat");
+	CloseHandle(panel);
+}
