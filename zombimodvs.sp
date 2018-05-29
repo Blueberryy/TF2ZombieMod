@@ -431,7 +431,7 @@ public Action:yazi3(Handle:timer, any:id)
 	PrintToChatAll("[TF2Z]Oyun içi müzikleri açmak veya kapatmak için [!msc] yazabilirsiniz.");
 }
 //buglı
-/*
+
 public Action:OnTakeDamage(id, &attacker, &inflictor, &Float:damage, &damagetype, &weapon, Float:damageForce[3], Float:damagePosition[3])
 {
 	
@@ -447,14 +447,14 @@ public Action:OnTakeDamage(id, &attacker, &inflictor, &Float:damage, &damagetype
 		{
 			if (!StrEqual(_weapon, "tf_weapon_grenadelauncher", false))
 			{
-				damage = 25.0;
-				bchanged = true;
+				//damage = 25.0;
+				//bchanged = true;
 			}
 			
 			if(!StrEqual(_weapon, "tf_weapon_flamethrower", false))
 			{
-				damage = 5.0;
-				bchanged = true;
+				//damage = 1.0;
+				//bchanged = true;
 		    }
 		    
 		}
@@ -463,7 +463,7 @@ public Action:OnTakeDamage(id, &attacker, &inflictor, &Float:damage, &damagetype
 	return Plugin_Continue;
 	
 }
-*/
+
 /*
 -------------------ŞARKILAR-----------------------------
 */
