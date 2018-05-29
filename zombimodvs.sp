@@ -164,17 +164,17 @@ public Action:test(client, args)
 {
 	if (oyun)
 	{
-		//PrintToChat(client, "Oyun:true");
-		//PrintToChat(client, "Hazırlık:%02d:%02d", sayim / 60, sayim % 60);
+		PrintToChat(client, "Oyun:true");
+		PrintToChat(client, "Hazırlık:%02d:%02d", sayim / 60, sayim % 60);
 	}
-	//PrintToChat(client, "Red:%d", TakimdakiOyuncular(2));
-	//PrintToChat(client, "Blue:%d", TakimdakiOyuncular(3));
+	PrintToChat(client, "Red:%d", TakimdakiOyuncular(2));
+	PrintToChat(client, "Blue:%d", TakimdakiOyuncular(3));
 	//zombikacis();
-	zombimod();
 	if (mapzf)
 	{
 		PrintToServer("[TF2Z]Harita ZF haritasidir.");
 	}
+	PrintToChat(client, "setup:%d", sayimsetup);
 }
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -231,8 +231,8 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 			case TFClass_Soldier:
 			{
 				//sınıflar arası dengeleme
-				TF2_RemoveWeaponSlot(client, 0);
-				PrintToChat(client, "[TF2Z]Soldierken zombilere karşı roketini kullanamazsın.");
+				//TF2_RemoveWeaponSlot(client, 0);
+				//PrintToChat(client, "[TF2Z]Soldierken zombilere karşı roketini kullanamazsın.");
 			}
 		}
 	}
@@ -484,10 +484,10 @@ zombimod()
 	GetCurrentMap(mapv, sizeof(mapv));
 	if (!StrContains(mapv, "zf_", false)) //(strcmp("zf_%s", mapv))
 	{
-		if (setupbitimi)
+		if(sayim < 0)
 		{
 			CreateTimer(1.0, Timer_SetTime, ent, TIMER_FLAG_NO_MAPCHANGE);
-		}
+	    }
 		//CreateTimer(1.0, Timer_SetTime, ent, TIMER_FLAG_NO_MAPCHANGE);
 		mapzf = true;
 	} else {
@@ -496,11 +496,8 @@ zombimod()
 }
 public Action:Timer_SetTime(Handle:timer, any:ent)
 {
-	if (sayimsetup == 0)
-	{
-		SetVariantInt(380); // 600 sec ~ 10min
-		AcceptEntityInput(ent, "SetTime");
-	}
+	SetVariantInt(380); // 600 sec ~ 10min
+	AcceptEntityInput(ent, "SetTime");
 	//SetVariantInt(380); // 600 sec ~ 10min
 	//AcceptEntityInput(ent, "SetTime");
 }
