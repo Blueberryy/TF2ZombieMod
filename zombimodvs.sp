@@ -80,6 +80,7 @@ public OnPluginStart()
 {
 	RegConsoleCmd("sm_msc", msc);
 	RegConsoleCmd("sm_test", test);
+	RegConsoleCmd("sm_menu", zmenu);
 	CreateTimer(1.0, hazirlik, _, TIMER_REPEAT);
 	CreateTimer(1.0, oyun1, _, TIMER_REPEAT);
 	CreateTimer(160.0, yazi1, _, TIMER_REPEAT);
@@ -103,6 +104,70 @@ public OnPluginStart()
 	AddCommandListener(hook_JoinClass, "joinclass");
 	AddCommandListener(BlockedCommands, "autoteam");
 }
+public Action:zmenu(client, args)
+{
+	/*
+	Menu hBilgi = new Menu(blg);
+	hBilgi.SetTitle("Zombie Modu");
+	hBilgi.AddItem("Yardım", "Yardım");
+	hBilgi.AddItem("Tercihler", "Tercihler");
+	hBilgi.AddItem("Yapımcılar", "Yapımcılar");
+	hBilgi.AddItem("Kapat", "Kapat");
+	hBilgi.ExitButton = false;
+	hBilgi.Display(client, 20);
+	*/
+	new Handle:panel = CreatePanel();
+	SetPanelTitle(panel, "ZF Esas Menü");
+	DrawPanelItem(panel, "Yardim");
+	DrawPanelItem(panel, "Tercihler");
+	DrawPanelItem(panel, "Yapımcılar");
+	DrawPanelItem(panel, "Kapat");
+	SendPanelToClient(panel, client, panel_HandleMain, 10);
+	CloseHandle(panel);
+}
+public panel_HandleMain(Handle:menu, MenuAction:action, param1, param2)
+{
+	if (action == MenuAction_Select)
+	{
+		switch (param2)
+		{
+			case 1:
+			{
+				Yardim(param1);
+			}
+			//case 2: panel_PrintPrefs(param1);
+			//case 3: panel_PrintCredits(param1);	  
+			default:return;
+		}
+	}
+}
+/*
+public blg(Handle hBilgi, MenuAction, action, client, item)
+{
+	if (action == MenuAction_Select)
+	{
+		switch(item)
+		{
+			case 0:
+			{
+				Yardim(client);
+		    }
+		    case 1:
+		    {
+		    	//TercihL(client);
+		    }
+		    case 2:
+		    {
+		    	//Yapimci(client);
+		    }
+		    case 3:
+		    {
+		    	//CloseHandle(hBilgi);
+		    }
+	    }
+    }
+}
+*/
 public mzk(Handle hMuzik, MenuAction action, client, item)
 {
 	if (action == MenuAction_Select)
@@ -451,12 +516,12 @@ public Action:OnTakeDamage(id, &attacker, &inflictor, &Float:damage, &damagetype
 				//bchanged = true;
 			}
 			
-			if(!StrEqual(_weapon, "tf_weapon_flamethrower", false))
+			if (!StrEqual(_weapon, "tf_weapon_flamethrower", false))
 			{
 				//damage = 1.0;
 				//bchanged = true;
-		    }
-		    
+			}
+			
 		}
 	}
 	if (bchanged)return Plugin_Changed;
@@ -661,4 +726,59 @@ valid(id)
 		return true;
 	}
 	return false;
+}
+
+//Menü Ayarları
+Yardim(client)
+{
+	Menu hYardim = new Menu(yrd);
+	hYardim.SetTitle("ZF Yardım Bölmesi(bilgi)");
+	hYardim.AddItem("ZF Hakkında", "ZF Hakkında");
+	hYardim.AddItem("Kapat", "Kapat");
+	hYardim.ExitButton = false;
+	hYardim.Display(client, 20);
+}
+public yrd(Handle hYardim, MenuAction action, client, item)
+{
+	if (action == MenuAction_Select)
+	{
+		switch (item)
+		{
+			case 0:
+			{
+				HakkindaK(client);
+			}
+			case 1:
+			{
+				CloseHandle(hYardim);
+			}
+		}
+	}
+}
+public HakkindaK(client)
+{
+	new Handle:panel = CreatePanel();
+	
+	SetPanelTitle(panel, "ZF Hakkında");
+	DrawPanelText(panel, "----------------------------------------------");
+	DrawPanelText(panel, "Zombie Fortress, oyuncuları zombiler ve insanlar");
+	DrawPanelText(panel, "arası ölümcül bir savaşa sokan custom moddur.");
+	DrawPanelText(panel, "Insanlar bu bitmek bilmeyen salgında hayatta kalmalıdır.");
+	DrawPanelText(panel, "Eğer insan infekte(ölürse) zombi olur.");
+	DrawPanelText(panel, "----------------------------------------------");
+	DrawPanelItem(panel, "Yardım menüsüne geri dön.");
+	DrawPanelItem(panel, "Kapat");
+	SendPanelToClient(panel, client, panel_HandleOverview, 10);
+	CloseHandle(panel);
+}
+public panel_HandleOverview(Handle:menu, MenuAction:action, param1, param2)
+{
+	if (action == MenuAction_Select)
+	{
+		switch (param2)
+		{
+			case 1:Yardim(param1);
+			default:return;
+		}
+	}
 } 
