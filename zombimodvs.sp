@@ -27,6 +27,10 @@ new dalgasuresi;
 new bool:kazanan;
 new bool:deneme = false;
 new bool:oyuncumuzik;
+new bool:mapzf = false;
+new bool:setupbitimi = false;
+new sayimsetup;
+
 //new bool:zombiee; gereksiz
 //new dalga;
 //new maxdalga = 10;
@@ -45,6 +49,7 @@ public Plugin:myinfo =
 public OnMapStart()
 {
 	zombimod();
+	setuptime();
 }
 public OnClientPutInServer(id)
 {
@@ -64,6 +69,7 @@ public OnPluginStart()
 	HookEvent("player_death", death);
 	HookEvent("player_spawn", spawn);
 	HookEvent("player_builtobject", event_PlayerBuiltObject);
+	HookEvent("teamplay_setup_finished", setup);
 	//HookEvent("player_team", team);
 	ServerCommand("sm_cvar tf_obj_upgrade_per_hit 0");
 	ServerCommand("sm_cvar tf_sentrygun_metal_per_shell 201");
@@ -110,6 +116,10 @@ public Action:hook_JoinClass(client, const String:command[], argc)
 	}
 	return Plugin_Continue;
 }
+public Action:setup(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	setupbitimi = true;
+}
 public Action:event_PlayerBuiltObject(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new index1 = GetEventInt(event, "index");
@@ -121,7 +131,8 @@ public Action:event_PlayerBuiltObject(Handle:event, const String:name[], bool:do
 	}
 	else if (object1 == PLAYERBUILTOBJECT_ID_SENTRY)
 	{
-		AcceptEntityInput(index1, "Kill");
+		SetEntProp(index1, Prop_Send, "m_bDisabled", 1);
+		SetEntProp(index1, Prop_Send, "m_iMaxHealth", 75);
 	}
 }
 /*
@@ -153,21 +164,28 @@ public Action:test(client, args)
 {
 	if (oyun)
 	{
-		PrintToChat(client, "Oyun:true");
-		PrintToChat(client, "Hazırlık:%02d:%02d", sayim / 60, sayim % 60);
+		//PrintToChat(client, "Oyun:true");
+		//PrintToChat(client, "Hazırlık:%02d:%02d", sayim / 60, sayim % 60);
 	}
-	PrintToChat(client, "Red:%d", TakimdakiOyuncular(2));
-	PrintToChat(client, "Blue:%d", TakimdakiOyuncular(3));
+	//PrintToChat(client, "Red:%d", TakimdakiOyuncular(2));
+	//PrintToChat(client, "Blue:%d", TakimdakiOyuncular(3));
 	//zombikacis();
+	zombimod();
+	if (mapzf)
+	{
+		PrintToServer("[TF2Z]Harita ZF haritasidir.");
+	}
 }
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	//new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	oyun = false;
 	sayim = 30;
-	dalgasuresi = 350;
+	dalgasuresi = 380;
+	sayimsetup = 30;
 	kazanan = false;
 	zombimod();
+	setuptime();
 }
 public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -209,6 +227,12 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 			{
 				//Escape modunda engineerler built yapamazlar.
 				//TF2_RemoveWeaponSlot(client, 3);
+			}
+			case TFClass_Soldier:
+			{
+				//sınıflar arası dengeleme
+				TF2_RemoveWeaponSlot(client, 0);
+				PrintToChat(client, "[TF2Z]Soldierken zombilere karşı roketini kullanamazsın.");
 			}
 		}
 	}
@@ -388,7 +412,25 @@ public Action:yazi3(Handle:timer, any:id)
 }
 public Action:OnTakeDamage(id, &attacker, &inflictor, &Float:damage, &damagetype, &weapon, Float:damageForce[3], Float:damagePosition[3])
 {
-	//
+	//test edilicek!.
+	new bool:bchanged;
+	if (valid(id) && valid(attacker))
+	{
+		decl String:_weapon[32];
+		GetEdictClassname(inflictor, _weapon, sizeof(_weapon));
+		new String:cweapon[32];
+		GetClientWeapon(attacker, cweapon, sizeof(cweapon));
+		if (TF2_GetClientTeam(id) == TFTeam_Blue) // hasarı alan
+		{
+			if (!StrEqual(_weapon, "tf_weapon_grenadelauncher", false))
+			{
+				damage = 25.0;
+				bchanged = true;
+			}
+		}
+	}
+	if (bchanged)return Plugin_Changed;
+	return Plugin_Continue;
 }
 /*
 -------------------ŞARKILAR-----------------------------
@@ -398,6 +440,26 @@ public Action:OnTakeDamage(id, &attacker, &inflictor, &Float:damage, &damagetype
 /*
 -------------------ZOMBİ KAÇIŞ BÖLÜMÜ-------------------
 */
+// SETUP timerini değiştirdik
+//Team round timer setup bitmeden setupun yerine geçtiğinden o  classname i kullandık.
+setuptime()
+{
+	new ent1 = FindEntityByClassname(MaxClients + 1, "team_round_timer");
+	if (ent1 == -1)
+	{
+		return;
+	}
+	if (sayim > 0)
+	{
+		CreateTimer(1.0, Timer_SetTimeSetup, ent1, TIMER_FLAG_NO_MAPCHANGE);
+	}
+}
+public Action:Timer_SetTimeSetup(Handle:timer, any:ent1)
+{
+	SetVariantInt(30);
+	sayimsetup--;
+	AcceptEntityInput(ent1, "SetTime");
+}
 zombimod()
 {
 	new ent = FindEntityByClassname(MaxClients + 1, "team_round_timer");
@@ -405,17 +467,42 @@ zombimod()
 	{
 		return;
 	}
+	/*
+	decl String:prefix[16];
+	GetCurrentMap(prefix, sizeof(prefix));
+	if(strcmp("zf_", prefix))
+	{
+		mapzf = true;
+		CreateTimer(1.0, Timer_SetTime, ent, TIMER_FLAG_NO_MAPCHANGE);
+    }
+    else if(!strcmp("zf_", prefix))
+    {
+    	mapzf = false;
+    }
+    */
 	decl String:mapv[256];
 	GetCurrentMap(mapv, sizeof(mapv));
-	if (strcmp("zf_%s", mapv))
+	if (!StrContains(mapv, "zf_", false)) //(strcmp("zf_%s", mapv))
 	{
-		CreateTimer(1.0, Timer_SetTime, ent, TIMER_FLAG_NO_MAPCHANGE);
+		if (setupbitimi)
+		{
+			CreateTimer(1.0, Timer_SetTime, ent, TIMER_FLAG_NO_MAPCHANGE);
+		}
+		//CreateTimer(1.0, Timer_SetTime, ent, TIMER_FLAG_NO_MAPCHANGE);
+		mapzf = true;
+	} else {
+		mapzf = false;
 	}
 }
 public Action:Timer_SetTime(Handle:timer, any:ent)
 {
-	SetVariantInt(380); // 600 sec ~ 10min
-	AcceptEntityInput(ent, "SetTime");
+	if (sayimsetup == 0)
+	{
+		SetVariantInt(380); // 600 sec ~ 10min
+		AcceptEntityInput(ent, "SetTime");
+	}
+	//SetVariantInt(380); // 600 sec ~ 10min
+	//AcceptEntityInput(ent, "SetTime");
 }
 zombikacis()
 {
@@ -537,4 +624,12 @@ OyuncuMuzikAyari(client, bool:acik)
 		PrintToChat(client, "kapali");
 		SetClientCookie(client, MusicCookie, strCookie);
 	}
+}
+valid(id)
+{
+	if (id > 0 && id <= MaxClients && IsClientInGame(id))
+	{
+		return true;
+	}
+	return false;
 } 
