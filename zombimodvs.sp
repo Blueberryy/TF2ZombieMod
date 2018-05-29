@@ -53,18 +53,38 @@ public OnMapStart()
 }
 public OnClientPutInServer(id)
 {
-	SDKHook(id, SDKHook_OnTakeDamage, OnTakeDamage);
+	//SDKHook(id, SDKHook_OnTakeDamage, OnTakeDamage);
+	/*
+	if(!oyun)
+	{
+		ChangeClientTeam(id, 2);
+	} else {
+		ChangeClientTeam(id, 3);
+		PrintToChat(id, "[TF2Z]Oyun başladığından ve sonradan geldiğinden zombi oldun!");
+	}
+	*/
 	xpoz[id][0] = 0.0, xpoz[id][1] = 0.0, xpoz[id][2] = 0.0;
 }
+//Round win var gereksiz
+/*
+public OnClientDisconnect_Post(id)
+{
+	xpoz[id][0] = 0.0, xpoz[id][1] = 0.0, xpoz[id][2] = 0.0;
+	if(oyun && TakimdakiOyuncular(3) == 0 && TakimdakiOyuncular(2) > 1)
+	{
+		zombi(rastgelezombi());
+    }
+}
+*/
 public OnPluginStart()
 {
 	RegConsoleCmd("sm_msc", msc);
 	RegConsoleCmd("sm_test", test);
 	CreateTimer(1.0, hazirlik, _, TIMER_REPEAT);
 	CreateTimer(1.0, oyun1, _, TIMER_REPEAT);
-	CreateTimer(60.0, yazi1, _, TIMER_REPEAT);
+	CreateTimer(160.0, yazi1, _, TIMER_REPEAT);
 	CreateTimer(120.0, yazi2, _, TIMER_REPEAT);
-	CreateTimer(90.0, yazi3, _, TIMER_REPEAT);
+	CreateTimer(190.0, yazi3, _, TIMER_REPEAT);
 	HookEvent("teamplay_round_start", round);
 	HookEvent("player_death", death);
 	HookEvent("player_spawn", spawn);
@@ -164,17 +184,17 @@ public Action:test(client, args)
 {
 	if (oyun)
 	{
-		PrintToChat(client, "Oyun:true");
-		PrintToChat(client, "Hazırlık:%02d:%02d", sayim / 60, sayim % 60);
+		//PrintToChat(client, "Oyun:true");
+		//PrintToChat(client, "Hazırlık:%02d:%02d", sayim / 60, sayim % 60);
 	}
-	PrintToChat(client, "Red:%d", TakimdakiOyuncular(2));
-	PrintToChat(client, "Blue:%d", TakimdakiOyuncular(3));
+	//PrintToChat(client, "Red:%d", TakimdakiOyuncular(2));
+	//PrintToChat(client, "Blue:%d", TakimdakiOyuncular(3));
 	//zombikacis();
 	if (mapzf)
 	{
-		PrintToServer("[TF2Z]Harita ZF haritasidir.");
+		//PrintToServer("[TF2Z]Harita ZF haritasidir.");
 	}
-	PrintToChat(client, "setup:%d", sayimsetup);
+	//PrintToChat(client, "setup:%d", sayimsetup);
 }
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -410,8 +430,11 @@ public Action:yazi3(Handle:timer, any:id)
 {
 	PrintToChatAll("[TF2Z]Oyun içi müzikleri açmak veya kapatmak için [!msc] yazabilirsiniz.");
 }
+//buglı
+/*
 public Action:OnTakeDamage(id, &attacker, &inflictor, &Float:damage, &damagetype, &weapon, Float:damageForce[3], Float:damagePosition[3])
 {
+	
 	//test edilicek!.
 	new bool:bchanged;
 	if (valid(id) && valid(attacker))
@@ -427,11 +450,20 @@ public Action:OnTakeDamage(id, &attacker, &inflictor, &Float:damage, &damagetype
 				damage = 25.0;
 				bchanged = true;
 			}
+			
+			if(!StrEqual(_weapon, "tf_weapon_flamethrower", false))
+			{
+				damage = 5.0;
+				bchanged = true;
+		    }
+		    
 		}
 	}
 	if (bchanged)return Plugin_Changed;
 	return Plugin_Continue;
+	
 }
+*/
 /*
 -------------------ŞARKILAR-----------------------------
 */
@@ -480,14 +512,14 @@ zombimod()
     	mapzf = false;
     }
     */
-	decl String:mapv[256];
+	decl String:mapv[6];
 	GetCurrentMap(mapv, sizeof(mapv));
-	if (!StrContains(mapv, "zf_", false)) //(strcmp("zf_%s", mapv))
+	if (!StrContains(mapv, "zf_", false)) //(strcmp("zf_%s", mapv)) 
 	{
-		if(sayim < 0)
+		if (sayim < 0)
 		{
 			CreateTimer(1.0, Timer_SetTime, ent, TIMER_FLAG_NO_MAPCHANGE);
-	    }
+		}
 		//CreateTimer(1.0, Timer_SetTime, ent, TIMER_FLAG_NO_MAPCHANGE);
 		mapzf = true;
 	} else {
