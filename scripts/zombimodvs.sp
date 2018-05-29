@@ -31,6 +31,7 @@ new bool:mapzf = false;
 new bool:setupbitimi = false;
 new sayimsetup;
 
+
 //new bool:zombiee; gereksiz
 //new dalga;
 //new maxdalga = 10;
@@ -137,9 +138,9 @@ public panel_HandleMain(Handle:menu, MenuAction:action, param1, param2)
 				Yardim(param1);
 			}
 			case 3:
-            {
-	            Yapimcilar(param1);
-            }
+			{
+				Yapimcilar(param1);
+			}
 			//case 3: panel_PrintCredits(param1);	  
 			default:return;
 		}
@@ -323,6 +324,10 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 				//TF2_RemoveWeaponSlot(client, 0);
 				//PrintToChat(client, "[TF2Z]Soldierken zombilere karşı roketini kullanamazsın.");
 			}
+			case TFClass_Spy:
+			{
+				TF2_RemoveWeaponSlot(client, 3);
+			}
 		}
 	}
 }
@@ -372,7 +377,7 @@ public Action:oyun1(Handle:timer, any:id)
 		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "I N S A N:%d", TakimdakiOyuncular(2));
 		for (new i = 1; i <= MaxClients; i++)
 		{
-			if (IsClientInGame(i) && IsPlayerAlive(i))
+			if (IsClientInGame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red)
 			{
 				SetEntProp(i, Prop_Send, "m_bGlowEnabled", 1);
 			}
@@ -385,7 +390,6 @@ public Action:oyun1(Handle:timer, any:id)
 		}
 		else if (TakimdakiOyuncular(2) == 1)
 		{
-			//HUD(-1.0, 0.2, 6.0, 255, 255, 255, 1, "\n\n\nTEK KİŞİ KALDI!");
 		}
 	}
 	else if (dalgasuresi <= 0 && oyun)
@@ -790,7 +794,7 @@ public panel_HandleOverview(Handle:menu, MenuAction:action, param1, param2)
 			default:return;
 		}
 	}
-} 
+}
 public Yapimcilar(client)
 {
 	new Handle:panel = CreatePanel();
