@@ -88,6 +88,7 @@ public OnPluginStart()
 	CreateTimer(120.0, yazi2, _, TIMER_REPEAT);
 	CreateTimer(120.0, yazi4, _, TIMER_REPEAT);
 	CreateTimer(190.0, yazi3, _, TIMER_REPEAT);
+	CreateTimer(1.0, Timer_SetTimeSetupSayim, _, TIMER_REPEAT);
 	HookEvent("teamplay_round_start", round);
 	HookEvent("player_death", death);
 	HookEvent("player_spawn", spawn);
@@ -108,16 +109,6 @@ public OnPluginStart()
 }
 public Action:zmenu(client, args)
 {
-	/*
-	Menu hBilgi = new Menu(blg);
-	hBilgi.SetTitle("Zombie Modu");
-	hBilgi.AddItem("Yardım", "Yardım");
-	hBilgi.AddItem("Tercihler", "Tercihler");
-	hBilgi.AddItem("Yapımcılar", "Yapımcılar");
-	hBilgi.AddItem("Kapat", "Kapat");
-	hBilgi.ExitButton = false;
-	hBilgi.Display(client, 20);
-	*/
 	new Handle:panel = CreatePanel();
 	SetPanelTitle(panel, "ZF Esas Menü");
 	DrawPanelItem(panel, "Yardim");
@@ -137,42 +128,15 @@ public panel_HandleMain(Handle:menu, MenuAction:action, param1, param2)
 			{
 				Yardim(param1);
 			}
-			case 3:
+			case 2:
 			{
-				Yapimcilar(param1);
+				mzkv2(param1);
 			}
 			//case 3: panel_PrintCredits(param1);	  
 			default:return;
 		}
 	}
 }
-/*
-public blg(Handle hBilgi, MenuAction, action, client, item)
-{
-	if (action == MenuAction_Select)
-	{
-		switch(item)
-		{
-			case 0:
-			{
-				Yardim(client);
-		    }
-		    case 1:
-		    {
-		    	//TercihL(client);
-		    }
-		    case 2:
-		    {
-		    	//Yapimci(client);
-		    }
-		    case 3:
-		    {
-		    	//CloseHandle(hBilgi);
-		    }
-	    }
-    }
-}
-*/
 public mzk(Handle hMuzik, MenuAction action, client, item)
 {
 	if (action == MenuAction_Select)
@@ -208,7 +172,8 @@ public Action:hook_JoinClass(client, const String:command[], argc)
 }
 public Action:setup(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	setupbitimi = true;
+	zombimod();
+	PrintToChatAll("Bitti");
 }
 public Action:event_PlayerBuiltObject(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -225,19 +190,6 @@ public Action:event_PlayerBuiltObject(Handle:event, const String:name[], bool:do
 		SetEntProp(index1, Prop_Send, "m_iMaxHealth", 75);
 	}
 }
-/*
-public Action:team(Handle:event, const String:name[], bool:dontBroadcast)
-{
-	new id = GetClientOfUserId(GetEventInt(event, "userid"));
-	if(!oyun && sayim > 0)
-	{
-		if(TF2_GetClientTeam(id) == TFTeam_Blue)
-		{
-			TF2_ChangeClientTeam(id, TFTeam_Red);
-		}
-	}
-}
-*/
 //----------------------MENU HANDLE------------------------------------------
 public Action:msc(client, args)
 {
@@ -264,7 +216,7 @@ public Action:test(client, args)
 	{
 		//PrintToServer("[TF2Z]Harita ZF haritasidir.");
 	}
-	//PrintToChat(client, "setup:%d", sayimsetup);
+	PrintToChat(client, "setup:%d", sayimsetup);
 }
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -272,7 +224,6 @@ public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 	oyun = false;
 	sayim = 30;
 	dalgasuresi = 380;
-	sayimsetup = 30;
 	kazanan = false;
 	zombimod();
 	setuptime();
@@ -566,8 +517,19 @@ setuptime()
 public Action:Timer_SetTimeSetup(Handle:timer, any:ent1)
 {
 	SetVariantInt(30);
-	sayimsetup--;
+	sayimsetup = 30;
 	AcceptEntityInput(ent1, "SetTime");
+}
+public Action:Timer_SetTimeSetupSayim(Handle:timer, any:id)
+{
+	if (sayim > 0)
+	{
+		sayimsetup--;
+		if (sayimsetup == 2)
+		{
+			sayimsetup = 0;
+		}
+	}
 }
 zombimod()
 {
@@ -576,24 +538,11 @@ zombimod()
 	{
 		return;
 	}
-	/*
-	decl String:prefix[16];
-	GetCurrentMap(prefix, sizeof(prefix));
-	if(strcmp("zf_", prefix))
-	{
-		mapzf = true;
-		CreateTimer(1.0, Timer_SetTime, ent, TIMER_FLAG_NO_MAPCHANGE);
-    }
-    else if(!strcmp("zf_", prefix))
-    {
-    	mapzf = false;
-    }
-    */
 	decl String:mapv[6];
 	GetCurrentMap(mapv, sizeof(mapv));
 	if (!StrContains(mapv, "zf_", false)) //(strcmp("zf_%s", mapv)) 
 	{
-		if (sayim < 0)
+		if (sayim < 0 && sayimsetup == 0)
 		{
 			CreateTimer(1.0, Timer_SetTime, ent, TIMER_FLAG_NO_MAPCHANGE);
 		}
@@ -605,7 +554,7 @@ zombimod()
 }
 public Action:Timer_SetTime(Handle:timer, any:ent)
 {
-	SetVariantInt(380); // 600 sec ~ 10min
+	SetVariantInt(350); // 600 sec ~ 10min
 	AcceptEntityInput(ent, "SetTime");
 	//SetVariantInt(380); // 600 sec ~ 10min
 	//AcceptEntityInput(ent, "SetTime");
@@ -696,20 +645,7 @@ MuzikAc(client)
 	//sesler = true;
 	PrintToChat(client, "[TF2Z]Müzikler açıldı.");
 }
-//vsh
-/*
-SetClientSoundOptions(client, excepttype, bool:on)
-{
-	if (!IsValidClient(client)) return;
-	if (IsFakeClient(client)) return;
-	if (!AreClientCookiesCached(client)) return;
-	new String:strCookie[32];
-	if (on) strCookie = "1";
-	else strCookie = "0";
-	if (excepttype == SOUNDEXCEPT_VOICE) SetClientCookie(client, VoiceCookie, strCookie);
-	else SetClientCookie(client, MusicCookie, strCookie);
-}
-*/
+
 OyuncuMuzikAyari(client, bool:acik)
 {
 	if (!IsClientInGame(client))
@@ -779,6 +715,7 @@ public HakkindaK(client)
 	DrawPanelText(panel, "Eğer insan infekte(ölürse) zombi olur.");
 	DrawPanelText(panel, "----------------------------------------------");
 	DrawPanelText(panel, "Modu Kodlayan:steamId=crackersarenoice - Deniz");
+	DrawPanelText(panel, "Modu Tamamiyle yeniden kodlanmıştır ayrıca zombie fortress haritalarına uyumlu tasarlanmıştır.");
 	DrawPanelItem(panel, "Yardım menüsüne geri dön.");
 	DrawPanelItem(panel, "Kapat");
 	SendPanelToClient(panel, client, panel_HandleOverview, 10);
@@ -800,7 +737,45 @@ public Yapimcilar(client)
 	new Handle:panel = CreatePanel();
 	
 	SetPanelTitle(panel, "Yapimci");
-	DrawPanelText(panel, "Kodlayan:steamId=crackersarenoice");
+	DrawPanelText(panel, "Kodlayan:steamId=crackersarenoice - Deniz");
+	DrawPanelItem(panel, "Yardim Menüsüne Geri Dön");
 	DrawPanelItem(panel, "Kapat");
+	SendPanelToClient(panel, client, panel_HandleYapimci, 10);
 	CloseHandle(panel);
 }
+public panel_HandleYapimci(Handle:menu, MenuAction:action, param1, param2)
+{
+	if (action == MenuAction_Select)
+	{
+		switch (param2)
+		{
+			case 1:Yardim(param1);
+			default:return;
+		}
+	}
+}
+public mzkv2(client)
+{
+	new Handle:panel = CreatePanel();
+	
+	SetPanelTitle(panel, "Tercihler - Müzik");
+	DrawPanelItem(panel, "Aç.");
+	DrawPanelItem(panel, "Kapa.");
+	DrawPanelItem(panel, "Yardım menüsüne geri dön.");
+	DrawPanelItem(panel, "Kapat");
+	SendPanelToClient(panel, client, panel_HandleMuzik, 10);
+	CloseHandle(panel);
+}
+public panel_HandleMuzik(Handle:menu, MenuAction:action, param1, param2)
+{
+	if (action == MenuAction_Select)
+	{
+		switch (param2)
+		{
+			case 1:MuzikAc(param1), OyuncuMuzikAyari(param1, true);
+			case 2:MuzikDurdurma(param1), OyuncuMuzikAyari(param1, false);
+			case 3:Yardim(param1);
+			default:return;
+		}
+	}
+} 
