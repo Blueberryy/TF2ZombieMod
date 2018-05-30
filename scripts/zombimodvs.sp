@@ -722,7 +722,6 @@ public HakkindaK(client)
 	DrawPanelText(panel, "arası ölümcül bir savaşa sokan custom moddur.");
 	DrawPanelText(panel, "Insanlar bu bitmek bilmeyen salgında hayatta kalmalıdır.");
 	DrawPanelText(panel, "Eğer insan infekte(ölürse) zombi olur.");
-	DrawPanelText(panel, "Base kurmak için engineerleri takip edebilirsiniz.");
 	DrawPanelText(panel, "----------------------------------------------");
 	DrawPanelText(panel, "Modu Kodlayan:steamId=crackersarenoice - Deniz");
 	DrawPanelText(panel, "Modu Tamamiyle yeniden kodlanmıştır ayrıca zombie fortress haritalarına uyumlu tasarlanmıştır.");
