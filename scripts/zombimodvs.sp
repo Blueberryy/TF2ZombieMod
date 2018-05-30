@@ -86,6 +86,7 @@ public OnPluginStart()
 	HookEvent("player_spawn", spawn);
 	HookEvent("player_builtobject", event_PlayerBuiltObject);
 	HookEvent("teamplay_setup_finished", setup);
+	HookEvent("teamplay_point_captured", captured, EventHookMode_Post);
 	//HookEvent("player_team", team);
 	ServerCommand("sm_cvar tf_obj_upgrade_per_hit 0");
 	ServerCommand("sm_cvar tf_sentrygun_metal_per_shell 201");
@@ -98,6 +99,11 @@ public OnPluginStart()
 	MusicCookie = RegClientCookie("oyuncu_mzk_ayari", "Muzik Ayarı", CookieAccess_Public);
 	AddCommandListener(hook_JoinClass, "joinclass");
 	AddCommandListener(BlockedCommands, "autoteam");
+}
+public Action:captured(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	kazanantakim(2);
+	oyunuresetle();
 }
 public Action:zmenu(client, args)
 {
