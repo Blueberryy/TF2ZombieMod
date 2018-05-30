@@ -1,1 +1,5 @@
-Modu zf haritalarında açın. Bazı haritaların zamanlayıcısı modla aynı anda gitmez. Bu genellikle sorun teşkil etmemektedir.
+Modu zf haritalarında açın. 
+
+
+
+Bazı haritaların zamanlayıcısı modla aynı anda gitmez. Bu genellikle sorun teşkil etmemektedir.
