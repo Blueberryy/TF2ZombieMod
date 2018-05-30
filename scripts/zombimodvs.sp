@@ -268,7 +268,7 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 					for (new i = 1; i <= MaxClients; i++)
 					{
 						SetEntProp(i, Prop_Send, "m_bGlowEnabled", 1);
-				    }
+					}
 				}
 				//Escape modunda engineerler built yapamazlar.
 				//TF2_RemoveWeaponSlot(client, 3);
@@ -800,4 +800,4 @@ sinifsayisi(siniff) // eski metot ile siniff yapabilirdim fakat tag mismatch war
 		}
 	}
 	return iSinifNum;
-}
+} 
