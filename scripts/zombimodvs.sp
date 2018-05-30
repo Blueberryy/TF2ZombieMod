@@ -10,6 +10,17 @@
 #define PLAYERBUILTOBJECT_ID_TELEXIT   2
 #define PLAYERBUILTOBJECT_ID_SENTRY    3
 
+#define TF_CLASS_DEMOMAN		4
+#define TF_CLASS_ENGINEER		9
+#define TF_CLASS_HEAVY			6
+#define TF_CLASS_MEDIC			5
+#define TF_CLASS_PYRO				7
+#define TF_CLASS_SCOUT			1
+#define TF_CLASS_SNIPER			2
+#define TF_CLASS_SOLDIER		3
+#define TF_CLASS_SPY				8
+#define TF_CLASS_UNKNOWN		0
+
 #include <sourcemod>
 #include <sdktools>
 #include <tf2>
@@ -30,6 +41,7 @@ new bool:deneme = false;
 new bool:mapzf = false;
 //new bool:setupbitimi = false;
 new sayimsetup;
+new kills[MAXPLAYERS + 1];
 
 
 //new bool:zombiee; gereksiz
@@ -54,29 +66,9 @@ public OnMapStart()
 }
 public OnClientPutInServer(id)
 {
-	//SDKHook(id, SDKHook_OnTakeDamage, OnTakeDamage);
-	/*
-	if(!oyun)
-	{
-		ChangeClientTeam(id, 2);
-	} else {
-		ChangeClientTeam(id, 3);
-		PrintToChat(id, "[TF2Z]Oyun başladığından ve sonradan geldiğinden zombi oldun!");
-	}
-	*/
+	SDKHook(id, SDKHook_OnTakeDamage, OnTakeDamage);
 	xpoz[id][0] = 0.0, xpoz[id][1] = 0.0, xpoz[id][2] = 0.0;
 }
-//Round win var gereksiz
-/*
-public OnClientDisconnect_Post(id)
-{
-	xpoz[id][0] = 0.0, xpoz[id][1] = 0.0, xpoz[id][2] = 0.0;
-	if(oyun && TakimdakiOyuncular(3) == 0 && TakimdakiOyuncular(2) > 1)
-	{
-		zombi(rastgelezombi());
-    }
-}
-*/
 public OnPluginStart()
 {
 	RegConsoleCmd("sm_msc", msc);
@@ -216,8 +208,9 @@ public Action:test(client, args)
 	{
 		//PrintToServer("[TF2Z]Harita ZF haritasidir.");
 	}
-	PrintToChat(client, "setup:%d", sayimsetup);
-	zombikacis();
+	//PrintToChat(client, "setup:%d", sayimsetup);
+	//PrintToChat(client, "heavysayisi:%d", sinifsayisi(TFClass_Heavy));
+	//PrintToChat(client, "engineersayisi:%d", sinifsayisi(TFClass_Engineer));
 }
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -267,6 +260,16 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 		{
 			case TFClass_Engineer:
 			{
+				if (sinifsayisi(TFClass_Engineer) > 2)
+				{
+					PrintToChat(client, "[TF2Z]Engineer sınıf limiti aşıldı!(2)");
+					ForcePlayerSuicide(client);
+					TF2_SetPlayerClass(client, TFClass_Scout);
+					for (new i = 1; i <= MaxClients; i++)
+					{
+						SetEntProp(i, Prop_Send, "m_bGlowEnabled", 1);
+				    }
+				}
 				//Escape modunda engineerler built yapamazlar.
 				//TF2_RemoveWeaponSlot(client, 3);
 			}
@@ -274,11 +277,19 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 			{
 				//sınıflar arası dengeleme
 				//TF2_RemoveWeaponSlot(client, 0);
-				//PrintToChat(client, "[TF2Z]Soldierken zombilere karşı roketini kullanamazsın.");
 			}
 			case TFClass_Spy:
 			{
 				TF2_RemoveWeaponSlot(client, 3);
+			}
+			case TFClass_Heavy:
+			{
+				if (sinifsayisi(TFClass_Heavy) > 5)
+				{
+					PrintToChat(client, "[TF2Z]Heavy sınıf limiti aşıldı(5)");
+					ForcePlayerSuicide(client);
+					TF2_SetPlayerClass(client, TFClass_Scout);
+				}
 			}
 		}
 	}
@@ -287,6 +298,15 @@ public Action:death(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new victim = GetClientOfUserId(GetEventInt(event, "userid"));
 	CreateTimer(0.3, dogus, victim, TIMER_FLAG_NO_MAPCHANGE);
+	new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+	if (victim != attacker) //intihar değilse
+	{
+		kills[attacker]++;
+	}
+	if (!oyun)
+	{
+		kills[attacker] = 0;
+	}
 }
 public Action:dogus(Handle:timer, any:id)
 {
@@ -349,7 +369,6 @@ public Action:oyun1(Handle:timer, any:id)
 		if (TakimdakiOyuncular(2) > 0)
 		{
 			kazanantakim(2);
-			//kazanan = true;
 			//ServerCommand("mp_restartgame 7 ");
 			oyunuresetle();
 		}
@@ -365,7 +384,6 @@ stock rastgelezombi()
 		{
 			oyuncular[num++] = i;
 		}
-		//return oyuncular[GetRandomInt(0, num - 1)];
 	}
 	return (num == 0) ? 0 : oyuncular[GetRandomInt(0, num - 1)];
 }
@@ -377,7 +395,6 @@ zombi(client)
 		SetEntProp(client, Prop_Send, "m_lifeState", 2);
 		ChangeClientTeam(client, 3);
 		SetEntProp(client, Prop_Send, "m_lifeState", 0);
-		//TF2_ChangeClientTeam(client, TFTeam_Blue);
 	}
 	CreateTimer(0.1, silah, client, TIMER_FLAG_NO_MAPCHANGE);
 }
@@ -439,7 +456,13 @@ HUD(Float:x, Float:y, Float:Sure, r, g, b, kanal, const String:message[], any:..
 		}
 	}
 }
-
+HUDC(client, Float:x, Float:y, Float:Sure, r, g, b, kanal, const String:message[], any:...) //Client
+{
+	SetHudTextParams(x, y, Sure, r, g, b, 255, 0, 6.0, 0.1, 0.2);
+	new String:buffer[256];
+	VFormat(buffer, sizeof(buffer), message, 9);
+	ShowHudText(client, kanal, buffer);
+}
 /*
 ---------------------CHAT TEXTLERİ---------------------
 */
@@ -492,15 +515,6 @@ public Action:OnTakeDamage(id, &attacker, &inflictor, &Float:damage, &damagetype
 	return Plugin_Continue;
 	
 }
-
-/*
--------------------ŞARKILAR-----------------------------
-*/
-
-
-/*
--------------------ZOMBİ KAÇIŞ BÖLÜMÜ-------------------
-*/
 // SETUP timerini değiştirdik
 //Team round timer setup bitmeden setupun yerine geçtiğinden o  classname i kullandık.
 setuptime()
@@ -547,7 +561,6 @@ zombimod()
 		{
 			CreateTimer(1.0, Timer_SetTime, ent, TIMER_FLAG_NO_MAPCHANGE);
 		}
-		//CreateTimer(1.0, Timer_SetTime, ent, TIMER_FLAG_NO_MAPCHANGE);
 		mapzf = true;
 	} else {
 		mapzf = false;
@@ -557,18 +570,16 @@ public Action:Timer_SetTime(Handle:timer, any:ent)
 {
 	SetVariantInt(350); // 600 sec ~ 10min
 	AcceptEntityInput(ent, "SetTime");
-	//SetVariantInt(380); // 600 sec ~ 10min
-	//AcceptEntityInput(ent, "SetTime");
 }
 zombikacis()
 {
 	new id = GetClientOfUserId(id);
-	//new bool:zombikaciss;
+	new bool:zombikaciss;
 	decl String:map[256];
 	GetCurrentMap(map, sizeof(map));
 	if (strcmp("ze_%s", map) && deneme)
 	{
-		//zombikaciss = true;
+		zombikaciss = true;
 		PrintToChatAll("[TF2Z]Ze modu aktifleştirildi.");
 		if (TakimdakiOyuncular(3) > 0)
 		{
@@ -590,15 +601,12 @@ zombikacis()
 		}
 	} else {
 		LogError("[TF2Z]Zombie Escape Modu etkinleştirilmedi. Harita uygun değil.");
-		//zombikaciss = false;
+		zombikaciss = false;
 	}
 }
 //mp_restartgame'dan daha çabuk yöntem.
 oyunuresetle()
 {
-	//new id = TakimdakiOyuncular(2);
-	//new id1 = TakimdakiOyuncular(3);
-	//new oyuncu[MaxClients + 1], num;
 	if (kazanan)
 	{
 		CreateTimer(15.0, res, _, TIMER_FLAG_NO_MAPCHANGE);
@@ -714,6 +722,7 @@ public HakkindaK(client)
 	DrawPanelText(panel, "arası ölümcül bir savaşa sokan custom moddur.");
 	DrawPanelText(panel, "Insanlar bu bitmek bilmeyen salgında hayatta kalmalıdır.");
 	DrawPanelText(panel, "Eğer insan infekte(ölürse) zombi olur.");
+	DrawPanelText(panel, "Base kurmak için engineerleri takip edebilirsiniz.");
 	DrawPanelText(panel, "----------------------------------------------");
 	DrawPanelText(panel, "Modu Kodlayan:steamId=crackersarenoice - Deniz");
 	DrawPanelText(panel, "Modu Tamamiyle yeniden kodlanmıştır ayrıca zombie fortress haritalarına uyumlu tasarlanmıştır.");
@@ -779,4 +788,16 @@ public panel_HandleMuzik(Handle:menu, MenuAction:action, param1, param2)
 			default:return;
 		}
 	}
-} 
+}
+sinifsayisi(siniff) // eski metot ile siniff yapabilirdim fakat tag mismatch warning verir.
+{
+	new iSinifNum;
+	for (new i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && TF2_GetPlayerClass(i) == siniff && TF2_GetClientTeam(i) == TFTeam_Red)
+		{
+			iSinifNum++;
+		}
+	}
+	return iSinifNum;
+}
