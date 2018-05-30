@@ -26,9 +26,9 @@ new sayim;
 new dalgasuresi;
 new bool:kazanan;
 new bool:deneme = false;
-new bool:oyuncumuzik;
+//new bool:oyuncumuzik;
 new bool:mapzf = false;
-new bool:setupbitimi = false;
+//new bool:setupbitimi = false;
 new sayimsetup;
 
 
@@ -217,6 +217,7 @@ public Action:test(client, args)
 		//PrintToServer("[TF2Z]Harita ZF haritasidir.");
 	}
 	PrintToChat(client, "setup:%d", sayimsetup);
+	zombikacis();
 }
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -562,12 +563,12 @@ public Action:Timer_SetTime(Handle:timer, any:ent)
 zombikacis()
 {
 	new id = GetClientOfUserId(id);
-	new bool:zombikaciss;
+	//new bool:zombikaciss;
 	decl String:map[256];
 	GetCurrentMap(map, sizeof(map));
 	if (strcmp("ze_%s", map) && deneme)
 	{
-		zombikaciss = true;
+		//zombikaciss = true;
 		PrintToChatAll("[TF2Z]Ze modu aktifleştirildi.");
 		if (TakimdakiOyuncular(3) > 0)
 		{
@@ -589,7 +590,7 @@ zombikacis()
 		}
 	} else {
 		LogError("[TF2Z]Zombie Escape Modu etkinleştirilmedi. Harita uygun değil.");
-		zombikaciss = false;
+		//zombikaciss = false;
 	}
 }
 //mp_restartgame'dan daha çabuk yöntem.
