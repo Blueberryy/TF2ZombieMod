@@ -265,10 +265,6 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 					PrintToChat(client, "[TF2Z]Engineer sınıf limiti aşıldı!(2)");
 					ForcePlayerSuicide(client);
 					TF2_SetPlayerClass(client, TFClass_Scout);
-					for (new i = 1; i <= MaxClients; i++)
-					{
-						SetEntProp(i, Prop_Send, "m_bGlowEnabled", 1);
-					}
 				}
 				//Escape modunda engineerler built yapamazlar.
 				//TF2_RemoveWeaponSlot(client, 3);
@@ -610,6 +606,7 @@ oyunuresetle()
 	if (kazanan)
 	{
 		CreateTimer(15.0, res, _, TIMER_FLAG_NO_MAPCHANGE);
+		ServerCommand("mp_restartgame 7 ");
 	}
 }
 public Action:res(Handle:timer, any:id)
