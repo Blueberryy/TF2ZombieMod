@@ -38,10 +38,11 @@ new dalgasuresi;
 new bool:kazanan;
 new bool:deneme = false;
 //new bool:oyuncumuzik;
-new bool:mapzf = false;
+//new bool:mapzf = false;
 //new bool:setupbitimi = false;
 new sayimsetup;
 new kills[MAXPLAYERS + 1];
+new bool:timer1 = false;
 
 
 //new bool:zombiee; gereksiz
@@ -72,7 +73,7 @@ public OnClientPutInServer(id)
 public OnPluginStart()
 {
 	RegConsoleCmd("sm_msc", msc);
-	RegConsoleCmd("sm_test", test);
+	//RegConsoleCmd("sm_test", test);
 	RegConsoleCmd("sm_menu", zmenu);
 	CreateTimer(1.0, hazirlik, _, TIMER_REPEAT);
 	CreateTimer(1.0, oyun1, _, TIMER_REPEAT);
@@ -200,24 +201,6 @@ public Action:msc(client, args)
 	
 }
 ///////////////////////////////////////////////////////////////////////////////
-public Action:test(client, args)
-{
-	if (oyun)
-	{
-		//PrintToChat(client, "Oyun:true");
-		//PrintToChat(client, "Hazırlık:%02d:%02d", sayim / 60, sayim % 60);
-	}
-	//PrintToChat(client, "Red:%d", TakimdakiOyuncular(2));
-	//PrintToChat(client, "Blue:%d", TakimdakiOyuncular(3));
-	//zombikacis();
-	if (mapzf)
-	{
-		//PrintToServer("[TF2Z]Harita ZF haritasidir.");
-	}
-	//PrintToChat(client, "setup:%d", sayimsetup);
-	//PrintToChat(client, "heavysayisi:%d", sinifsayisi(TFClass_Heavy));
-	//PrintToChat(client, "engineersayisi:%d", sinifsayisi(TFClass_Engineer));
-}
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	//new client = GetClientOfUserId(GetEventInt(event, "userid"));
@@ -349,6 +332,7 @@ public Action:oyun1(Handle:timer, any:id)
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Süre:%02d:%02d", dalgasuresi / 60, dalgasuresi % 60);
 		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "☠Z O M B I☠:%d", TakimdakiOyuncular(3));
 		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "I N S A N:%d", TakimdakiOyuncular(2));
+		PrintHintTextToAll("DALGA 1");
 		for (new i = 1; i <= MaxClients; i++)
 		{
 			if (IsClientInGame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red)
@@ -561,11 +545,27 @@ zombimod()
 	{
 		if (sayim < 0 && sayimsetup == 0)
 		{
-			CreateTimer(1.0, Timer_SetTime, ent, TIMER_FLAG_NO_MAPCHANGE);
+			//CreateTimer(1.0, Timer_SetTime, ent, TIMER_FLAG_NO_MAPCHANGE);
+			timer1 = true;
+		} else {
+			timer1 = false;
 		}
-		mapzf = true;
+		//mapzf = true;
 	} else {
-		mapzf = false;
+		//mapzf = false;
+	}
+	if (!StrContains(mapv, "szf_", false))
+	{
+		if (sayim < 0 && sayimsetup == 0)
+		{
+			timer1 = true;
+		} else {
+			timer1 = false;
+		}
+	}
+	if (timer1)
+	{
+		CreateTimer(1.0, Timer_SetTime, ent, TIMER_FLAG_NO_MAPCHANGE);
 	}
 }
 public Action:Timer_SetTime(Handle:timer, any:ent)
@@ -612,7 +612,7 @@ oyunuresetle()
 	if (kazanan)
 	{
 		CreateTimer(15.0, res, _, TIMER_FLAG_NO_MAPCHANGE);
-		ServerCommand("mp_restartgame 7 ");
+		//ServerCommand("mp_restartgame 7 ");
 	}
 }
 public Action:res(Handle:timer, any:id)
@@ -727,7 +727,6 @@ public HakkindaK(client)
 	DrawPanelText(panel, "Eğer insan infekte(ölürse) zombi olur.");
 	DrawPanelText(panel, "----------------------------------------------");
 	DrawPanelText(panel, "Modu Kodlayan:steamId=crackersarenoice - Deniz");
-	DrawPanelText(panel, "Modu Tamamiyle yeniden kodlanmıştır ayrıca zombie fortress haritalarına uyumlu tasarlanmıştır.");
 	DrawPanelItem(panel, "Yardım menüsüne geri dön.");
 	DrawPanelItem(panel, "Kapat");
 	SendPanelToClient(panel, client, panel_HandleOverview, 10);
