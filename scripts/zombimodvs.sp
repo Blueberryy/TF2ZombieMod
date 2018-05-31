@@ -3,7 +3,7 @@
 #define DEBUG
 
 #define PLUGIN_AUTHOR "steamId=crackersarenoice"
-#define PLUGIN_VERSION "0.10"
+#define PLUGIN_VERSION "1.02"
 #define sarkir01 "left4fortress/rabies01.mp3"
 #define PLAYERBUILTOBJECT_ID_DISPENSER 0
 #define PLAYERBUILTOBJECT_ID_TELENT    1
@@ -58,7 +58,7 @@ public Plugin:myinfo =
 	author = PLUGIN_AUTHOR, 
 	description = "", 
 	version = PLUGIN_VERSION, 
-	url = ""
+	url = "tf2türkiye.com"
 };
 public OnMapStart()
 {
@@ -131,7 +131,7 @@ public panel_HandleMain(Handle:menu, MenuAction:action, param1, param2)
 			{
 				mzkv2(param1);
 			}
-			//case 3: panel_PrintCredits(param1);	  
+			case 3: Yapimcilar(param1);	  
 			default:return;
 		}
 	}
