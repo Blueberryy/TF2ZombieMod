@@ -54,7 +54,7 @@ new Float:xpoz[MAXPLAYERS + 1][3];
 
 public Plugin:myinfo = 
 {
-	name = "", 
+	name = "Zombie Escape/Survival", 
 	author = PLUGIN_AUTHOR, 
 	description = "", 
 	version = PLUGIN_VERSION, 
