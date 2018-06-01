@@ -252,8 +252,7 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 				if (sinifsayisi(TFClass_Engineer) > 2)
 				{
 					PrintToChat(client, "[TF2Z]Engineer sınıf limiti aşıldı!(2)");
-					ForcePlayerSuicide(client);
-					TF2_SetPlayerClass(client, TFClass_Scout);
+					CreateTimer(1.0, sinifdegistirme2, client, TIMER_FLAG_NO_MAPCHANGE);
 				}
 				//Escape modunda engineerler built yapamazlar.
 				//TF2_RemoveWeaponSlot(client, 3);
@@ -272,12 +271,21 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 				if (sinifsayisi(TFClass_Heavy) > 5)
 				{
 					PrintToChat(client, "[TF2Z]Heavy sınıf limiti aşıldı(5)");
-					ForcePlayerSuicide(client);
-					TF2_SetPlayerClass(client, TFClass_Scout);
+					CreateTimer(1.0, sinifdegistirme, client, TIMER_FLAG_NO_MAPCHANGE);
 				}
 			}
 		}
 	}
+}
+public Action:sinifdegistirme(Handle:timer, any:client)
+{
+	ForcePlayerSuicide(client);
+	TF2_SetPlayerClass(client, TFClass_Scout);
+}
+public Action:sinifdegistirme2(Handle:timer, any:client)
+{
+	ForcePlayerSuicide(client);
+	TF2_SetPlayerClass(client, TFClass_Scout);
 }
 public Action:death(Handle:event, const String:name[], bool:dontBroadcast)
 {
