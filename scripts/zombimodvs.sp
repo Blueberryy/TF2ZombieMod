@@ -259,7 +259,7 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 		if(oyun && !IsPlayerAlive(client))
 		{
 			ChangeClientTeam(client, 3);
-	    }
+	        }
 		switch (TF2_GetPlayerClass(client))
 		{
 			case TFClass_Engineer:
