@@ -43,7 +43,7 @@ new bool:deneme = false;
 new sayimsetup;
 //new kills[MAXPLAYERS + 1];
 new bool:timer1 = false;
-new bool:sinifdegistirme = false;
+
 
 //new bool:zombiee; gereksiz
 //new dalga;
@@ -69,7 +69,7 @@ public OnClientPutInServer(id)
 {
 	SDKHook(id, SDKHook_OnTakeDamage, OnTakeDamage);
 	//xpoz[id][0] = 0.0, xpoz[id][1] = 0.0, xpoz[id][2] = 0.0;
-	if (dalgasuresi > 0 && oyun && TakimdakiOyuncular(3) > 0 && !IsPlayerAlive(id))
+	if (dalgasuresi > 0 && oyun && TakimdakiOyuncular(3) > 0 && !IsPlayerAlive(id) && sayim <= 0)
 	{
 		ChangeClientTeam(id, 3);
 	}
@@ -104,6 +104,7 @@ public OnPluginStart()
 	MusicCookie = RegClientCookie("oyuncu_mzk_ayari", "Muzik Ayarı", CookieAccess_Public);
 	AddCommandListener(hook_JoinClass, "joinclass");
 	AddCommandListener(BlockedCommands, "autoteam");
+	AddCommandListener(BlockedCommandsteam, "jointeam");
 }
 public Action:captured(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -164,17 +165,21 @@ public Action:BlockedCommands(client, const String:command[], argc)
 {
 	return Plugin_Handled;
 }
+public Action:BlockedCommandsteam(client, const String:command[], argc)
+{
+	if (dalgasuresi > 0 && oyun && TF2_GetClientTeam(client) != TFTeam_Spectator)
+	{
+		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun esnasında takım değiştirilemez!");
+		return Plugin_Handled;
+	}
+	return Plugin_Continue;
+}
 public Action:hook_JoinClass(client, const String:command[], argc)
 {
 	if (dalgasuresi > 0 && oyun && TF2_GetClientTeam(client) == TFTeam_Red)
 	{
 		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun esnasında sınıf değiştiremezsin!");
-		sinifdegistirme = false;
 		return Plugin_Handled;
-	}
-	else if (dalgasuresi > 0 && oyun && TF2_GetClientTeam(client) == TFTeam_Blue)
-	{
-		sinifdegistirme = true;
 	}
 	return Plugin_Continue;
 }
@@ -244,19 +249,8 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 	} else {
 		SetEntityRenderColor(client, 255, 255, 255, 0);
 	}
-	for (new i = 1; i <= MaxClients; i++)
-	{
-		if (IsClientInGame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red)
-		{
-			SetEntProp(i, Prop_Send, "m_bGlowEnabled", 1);
-		}
-	}
 	if (TF2_GetClientTeam(client) == TFTeam_Red)
 	{
-		if (oyun && sinifdegistirme)
-		{
-			ChangeClientTeam(client, 3);
-		}
 		switch (TF2_GetPlayerClass(client))
 		{
 			case TFClass_Spy:
@@ -268,6 +262,15 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 				if (sinifsayisi(TFClass_Heavy) > 5)
 				{
 					//
+				}
+			}
+			case TFClass_Engineer:
+			{
+				if (sinifsayisi(TFClass_Engineer) > 2)
+				{
+					TF2_SetPlayerClass(client, TFClass_Scout);
+					PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCEngineer limiti aşıldı (2)!");
+					ForcePlayerSuicide(client);
 				}
 			}
 		}
@@ -316,6 +319,13 @@ public Action:oyun1(Handle:timer, any:id)
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Süre:%02d:%02d", dalgasuresi / 60, dalgasuresi % 60);
 		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "☠Z O M B I☠:%d", TakimdakiOyuncular(3));
 		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "I N S A N:%d", TakimdakiOyuncular(2));
+		for (new i = 1; i <= MaxClients; i++)
+		{
+			if (IsClientInGame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red)
+			{
+				SetEntProp(i, Prop_Send, "m_bGlowEnabled", 1);
+			}
+		}
 		if (TakimdakiOyuncular(2) == 0) //2 red 3 blue
 		{
 			kazanantakim(3);
