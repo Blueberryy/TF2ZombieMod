@@ -69,7 +69,7 @@ public OnClientPutInServer(id)
 {
 	SDKHook(id, SDKHook_OnTakeDamage, OnTakeDamage);
 	xpoz[id][0] = 0.0, xpoz[id][1] = 0.0, xpoz[id][2] = 0.0;
-	if (oyun && TakimdakiOyuncular(3) > 0)
+	if (oyun && TakimdakiOyuncular(3) > 0 && !IsPlayerAlive(id))
 	{
 		ChangeClientTeam(id, 3);
 	}
@@ -256,10 +256,6 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 	}
 	if (TF2_GetClientTeam(client) == TFTeam_Red)
 	{
-		if(oyun && !IsPlayerAlive(client))
-		{
-			ChangeClientTeam(client, 3);
-	        }
 		switch (TF2_GetPlayerClass(client))
 		{
 			case TFClass_Engineer:
@@ -516,7 +512,6 @@ public Action:OnTakeDamage(id, &attacker, &inflictor, &Float:damage, &damagetype
 				//damage = 1.0;
 				//bchanged = true;
 			}
-			
 		}
 	}
 	if (bchanged)return Plugin_Changed;
