@@ -43,7 +43,7 @@ new bool:deneme = false;
 new sayimsetup;
 //new kills[MAXPLAYERS + 1];
 new bool:timer1 = false;
-
+new bool:sinifdegistirme = false;
 
 //new bool:zombiee; gereksiz
 //new dalga;
@@ -166,10 +166,15 @@ public Action:BlockedCommands(client, const String:command[], argc)
 }
 public Action:hook_JoinClass(client, const String:command[], argc)
 {
-	if (dalgasuresi > 0 && oyun && TF2_GetClientTeam(client) != TFTeam_Blue)
+	if (dalgasuresi > 0 && oyun && TF2_GetClientTeam(client) == TFTeam_Red)
 	{
 		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun esnasında sınıf değiştiremezsin!");
+		sinifdegistirme = false;
 		return Plugin_Handled;
+	}
+	else if (dalgasuresi > 0 && oyun && TF2_GetClientTeam(client) == TFTeam_Blue)
+	{
+		sinifdegistirme = true;
 	}
 	return Plugin_Continue;
 }
@@ -212,16 +217,9 @@ public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 	sayim = 30;
 	dalgasuresi = 380;
 	kazanan = false;
-	//CreateTimer(1.0, rndrestart, _, TIMER_FLAG_NO_MAPCHANGE);
 	zombimod();
 	setuptime();
 }
-/*
-public Action:rndrestart(Handle:timer, any:id)
-{
-	ServerCommand("mp_restartgame 1 ");
-}
-*/
 public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	//decl target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
@@ -229,7 +227,6 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 	if (TF2_GetClientTeam(client) == TFTeam_Blue)
 	{
 		//zombiee = true; gereksiz
-		SetEntityHealth(client, 390);
 		SetEntityRenderColor(client, 0, 255, 0, 0);
 		if (!oyun && sayim > 0 && sayim <= 30)
 		{
@@ -240,20 +237,11 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 		else if (oyun && dalgasuresi > 0 && dalgasuresi < 350)
 		{
 			SetEntityRenderColor(client, 0, 255, 0, 0);
+			SetEntityHealth(client, 390);
 			zombi(client);
-			/*
-			if (xpoz[client][0] != 0.0 && xpoz[client][1] != 0.0 && xpoz[client][2] != 0.0)
-			{
-				//Doğduğu yerde zombi olması. ya da zombi olduğu yerde doğması.
-				TeleportEntity(client, xpoz[client], NULL_VECTOR, NULL_VECTOR);
-				SetEntProp(client, Prop_Send, "m_bDucked", 1);
-				xpoz[client][0] = 0.0, xpoz[client][1] = 0.0, xpoz[client][2] = 0.0;
-			}
-			*/
 		}
 		
 	} else {
-		//zombiee = false; gereksiz
 		SetEntityRenderColor(client, 255, 255, 255, 0);
 	}
 	for (new i = 1; i <= MaxClients; i++)
@@ -265,23 +253,12 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 	}
 	if (TF2_GetClientTeam(client) == TFTeam_Red)
 	{
+		if (oyun && sinifdegistirme)
+		{
+			ChangeClientTeam(client, 3);
+		}
 		switch (TF2_GetPlayerClass(client))
 		{
-			case TFClass_Engineer:
-			{
-				if (sinifsayisi(TFClass_Engineer) > 2)
-				{
-					PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCEngineer sınıf limiti aşıldı!(2)");
-					CreateTimer(1.0, sinifdegistirme2, client, TIMER_FLAG_NO_MAPCHANGE);
-				}
-				//Escape modunda engineerler built yapamazlar.
-				//TF2_RemoveWeaponSlot(client, 3);
-			}
-			case TFClass_Soldier:
-			{
-				//sınıflar arası dengeleme
-				//TF2_RemoveWeaponSlot(client, 0);
-			}
 			case TFClass_Spy:
 			{
 				TF2_RemoveWeaponSlot(client, 3);
@@ -290,23 +267,13 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 			{
 				if (sinifsayisi(TFClass_Heavy) > 5)
 				{
-					PrintToChat(client, "[TF2Z]Heavy sınıf limiti aşıldı(5)");
-					CreateTimer(1.0, sinifdegistirme, client, TIMER_FLAG_NO_MAPCHANGE);
+					//
 				}
 			}
 		}
 	}
 }
-public Action:sinifdegistirme(Handle:timer, any:client)
-{
-	ForcePlayerSuicide(client);
-	TF2_SetPlayerClass(client, TFClass_Scout);
-}
-public Action:sinifdegistirme2(Handle:timer, any:client)
-{
-	ForcePlayerSuicide(client);
-	TF2_SetPlayerClass(client, TFClass_Scout);
-}
+//ForcePlayerSuicide
 public Action:death(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new victim = GetClientOfUserId(GetEventInt(event, "userid"));
@@ -317,7 +284,6 @@ public Action:dogus(Handle:timer, any:id)
 	if (TF2_GetClientTeam(id) == TFTeam_Red && oyun)
 	{
 		zombi(id);
-		//GetClientAbsOrigin(id, xpoz[id]);
 		HUD(-1.0, 0.2, 6.0, 255, 0, 0, 2, "\n☠☠☠\n%N", id);
 	}
 }
@@ -330,7 +296,6 @@ public Action:hazirlik(Handle:timer, any:client)
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Hazırlık:%02d:%02d", sayim / 60, sayim % 60);
 		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "☠Z O M B I☠:%d", TakimdakiOyuncular(3));
 		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "I N S A N:%d", TakimdakiOyuncular(2));
-		//PrintHintTextToAll("Oyunun başlamasına::%02d:%02d", sayim / 60, sayim % 60);
 		dalgasuresi = 350;
 		oyun = false;
 	} else {
@@ -354,7 +319,6 @@ public Action:oyun1(Handle:timer, any:id)
 		if (TakimdakiOyuncular(2) == 0) //2 red 3 blue
 		{
 			kazanantakim(3);
-			//ServerCommand("mp_restartgame 7 ");
 			oyunuresetle();
 		}
 		else if (TakimdakiOyuncular(2) == 1)
@@ -366,7 +330,6 @@ public Action:oyun1(Handle:timer, any:id)
 		if (TakimdakiOyuncular(2) > 0)
 		{
 			kazanantakim(2);
-			//ServerCommand("mp_restartgame 7 ");
 			oyunuresetle();
 		}
 	}
