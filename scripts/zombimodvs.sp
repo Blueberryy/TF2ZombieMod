@@ -168,7 +168,7 @@ public Action:hook_JoinClass(client, const String:command[], argc)
 {
 	if (dalgasuresi > 0 && oyun && TF2_GetClientTeam(client) != TFTeam_Blue)
 	{
-		PrintToChat(client, "[TF2Z]Oyun esnasında sınıf değiştiremezsin!");
+		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun esnasında sınıf değiştiremezsin!");
 		return Plugin_Handled;
 	}
 	return Plugin_Continue;
@@ -234,7 +234,7 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 		if (!oyun && sayim > 0 && sayim <= 30)
 		{
 			TF2_ChangeClientTeam(client, TFTeam_Red);
-			PrintToChat(client, "[TF2Z]Oyun Başlamadan Zombi Olamazsın!");
+			PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun Başlamadan Zombi Olamazsın!");
 		}
 		
 		else if (oyun && dalgasuresi > 0 && dalgasuresi < 350)
@@ -262,7 +262,7 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 			{
 				if (sinifsayisi(TFClass_Engineer) > 2)
 				{
-					PrintToChat(client, "[TF2Z]Engineer sınıf limiti aşıldı!(2)");
+					PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCEngineer sınıf limiti aşıldı!(2)");
 					CreateTimer(1.0, sinifdegistirme2, client, TIMER_FLAG_NO_MAPCHANGE);
 				}
 				//Escape modunda engineerler built yapamazlar.
