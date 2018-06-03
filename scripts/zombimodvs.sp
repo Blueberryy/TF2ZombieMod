@@ -41,7 +41,7 @@ new bool:deneme = false;
 //new bool:mapzf = false;
 //new bool:setupbitimi = false;
 new sayimsetup;
-new kills[MAXPLAYERS + 1];
+//new kills[MAXPLAYERS + 1];
 new bool:timer1 = false;
 
 
@@ -50,7 +50,7 @@ new bool:timer1 = false;
 //new maxdalga = 10;
 // red insan
 //pozisyon
-new Float:xpoz[MAXPLAYERS + 1][3];
+//new Float:xpoz[MAXPLAYERS + 1][3];
 
 public Plugin:myinfo = 
 {
@@ -68,8 +68,8 @@ public OnMapStart()
 public OnClientPutInServer(id)
 {
 	SDKHook(id, SDKHook_OnTakeDamage, OnTakeDamage);
-	xpoz[id][0] = 0.0, xpoz[id][1] = 0.0, xpoz[id][2] = 0.0;
-	if (oyun && TakimdakiOyuncular(3) > 0 && !IsPlayerAlive(id))
+	//xpoz[id][0] = 0.0, xpoz[id][1] = 0.0, xpoz[id][2] = 0.0;
+	if (dalgasuresi > 0 && oyun && TakimdakiOyuncular(3) > 0 && !IsPlayerAlive(id))
 	{
 		ChangeClientTeam(id, 3);
 	}
@@ -176,7 +176,7 @@ public Action:hook_JoinClass(client, const String:command[], argc)
 public Action:setup(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	zombimod();
-	PrintToChatAll("Bitti");
+	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCHazırlık bitti!");
 }
 public Action:event_PlayerBuiltObject(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -241,6 +241,7 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 		{
 			SetEntityRenderColor(client, 0, 255, 0, 0);
 			zombi(client);
+			/*
 			if (xpoz[client][0] != 0.0 && xpoz[client][1] != 0.0 && xpoz[client][2] != 0.0)
 			{
 				//Doğduğu yerde zombi olması. ya da zombi olduğu yerde doğması.
@@ -248,11 +249,19 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 				SetEntProp(client, Prop_Send, "m_bDucked", 1);
 				xpoz[client][0] = 0.0, xpoz[client][1] = 0.0, xpoz[client][2] = 0.0;
 			}
+			*/
 		}
 		
 	} else {
 		//zombiee = false; gereksiz
 		SetEntityRenderColor(client, 255, 255, 255, 0);
+	}
+	for (new i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red)
+		{
+			SetEntProp(i, Prop_Send, "m_bGlowEnabled", 1);
+		}
 	}
 	if (TF2_GetClientTeam(client) == TFTeam_Red)
 	{
@@ -302,22 +311,13 @@ public Action:death(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new victim = GetClientOfUserId(GetEventInt(event, "userid"));
 	CreateTimer(0.3, dogus, victim, TIMER_FLAG_NO_MAPCHANGE);
-	new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
-	if (victim != attacker) //intihar değilse
-	{
-		kills[attacker]++;
-	}
-	if (!oyun)
-	{
-		kills[attacker] = 0;
-	}
 }
 public Action:dogus(Handle:timer, any:id)
 {
 	if (TF2_GetClientTeam(id) == TFTeam_Red && oyun)
 	{
 		zombi(id);
-		GetClientAbsOrigin(id, xpoz[id]);
+		//GetClientAbsOrigin(id, xpoz[id]);
 		HUD(-1.0, 0.2, 6.0, 255, 0, 0, 2, "\n☠☠☠\n%N", id);
 	}
 }
@@ -351,13 +351,6 @@ public Action:oyun1(Handle:timer, any:id)
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Süre:%02d:%02d", dalgasuresi / 60, dalgasuresi % 60);
 		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "☠Z O M B I☠:%d", TakimdakiOyuncular(3));
 		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "I N S A N:%d", TakimdakiOyuncular(2));
-		for (new i = 1; i <= MaxClients; i++)
-		{
-			if (IsClientInGame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red)
-			{
-				SetEntProp(i, Prop_Send, "m_bGlowEnabled", 1);
-			}
-		}
 		if (TakimdakiOyuncular(2) == 0) //2 red 3 blue
 		{
 			kazanantakim(3);
