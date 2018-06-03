@@ -212,8 +212,13 @@ public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 	sayim = 30;
 	dalgasuresi = 380;
 	kazanan = false;
+	CreateTimer(1.0, rndrestart, _, TIMER_FLAG_NO_MAPCHANGE);
 	zombimod();
 	setuptime();
+}
+public Action:rndrestart(Handle:timer, any:id)
+{
+	ServerCommand("mp_restartgame 1 ");
 }
 public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
