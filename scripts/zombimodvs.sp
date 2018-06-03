@@ -473,19 +473,19 @@ HUDC(client, Float:x, Float:y, Float:Sure, r, g, b, kanal, const String:message[
 */
 public Action:yazi1(Handle:timer, any:id)
 {
-	PrintToChatAll("[TF2Z]Hazırlık süresi 30(varsayılan) saniyedir.");
+	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCHazırlık süresi 30(varsayılan) saniyedir.");
 }
 public Action:yazi2(Handle:timer, any:id)
 {
-	PrintToChatAll("[TF2Z]Hayatta kalmaya çalışın!");
+	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCHayatta kalmaya çalışın!");
 }
 public Action:yazi3(Handle:timer, any:id)
 {
-	PrintToChatAll("[TF2Z]Oyun içi müzikleri açmak veya kapatmak için [!msc] yazabilirsiniz.");
+	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun içi müzikleri açmak veya kapatmak için [!msc] yazabilirsiniz.");
 }
 public Action:yazi4(Handle:timer, any:id)
 {
-	PrintToChatAll("[TF2Z]Oyun hakkında bilgi için [!menu] yazabilirsiniz.");
+	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun hakkında bilgi için [!menu] yazabilirsiniz.");
 }
 //buglı
 
