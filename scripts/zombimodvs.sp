@@ -69,10 +69,10 @@ public OnClientPutInServer(id)
 {
 	SDKHook(id, SDKHook_OnTakeDamage, OnTakeDamage);
 	xpoz[id][0] = 0.0, xpoz[id][1] = 0.0, xpoz[id][2] = 0.0;
-	if(oyun)
+	if (oyun && TakimdakiOyuncular(3) > 0)
 	{
 		ChangeClientTeam(id, 3);
-    }
+	}
 }
 public OnPluginStart()
 {
@@ -135,7 +135,7 @@ public panel_HandleMain(Handle:menu, MenuAction:action, param1, param2)
 			{
 				mzkv2(param1);
 			}
-			case 3: Yapimcilar(param1);	  
+			case 3:Yapimcilar(param1);
 			default:return;
 		}
 	}
@@ -351,7 +351,6 @@ public Action:oyun1(Handle:timer, any:id)
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Süre:%02d:%02d", dalgasuresi / 60, dalgasuresi % 60);
 		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "☠Z O M B I☠:%d", TakimdakiOyuncular(3));
 		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "I N S A N:%d", TakimdakiOyuncular(2));
-		PrintHintTextToAll("DALGA 1");
 		for (new i = 1; i <= MaxClients; i++)
 		{
 			if (IsClientInGame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red)
