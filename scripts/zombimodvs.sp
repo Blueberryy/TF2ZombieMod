@@ -69,6 +69,10 @@ public OnClientPutInServer(id)
 {
 	SDKHook(id, SDKHook_OnTakeDamage, OnTakeDamage);
 	xpoz[id][0] = 0.0, xpoz[id][1] = 0.0, xpoz[id][2] = 0.0;
+	if(oyun)
+	{
+		ChangeClientTeam(id, 3);
+    }
 }
 public OnPluginStart()
 {
