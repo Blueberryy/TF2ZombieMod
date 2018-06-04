@@ -1,0 +1,23 @@
+Update Notes(Güncelleme Notları)
+
+04.06.2018 - 1.03 A
+-Convarlar eklendi
+-Zombiler capture ettiği zaman kazanan takımın insanlar olması düzeltildi.
+-Sınıfsal özellikler
+-CPU Araştırması
+
+05.06.2018 - 1.03 B
+-CPU Araştırması
+-HUDLAR Sadeleştirilecek
+-Zombilerin canları düzenlenecek
+-Genel hasar güncellemesi
+
+06.06.2018 - 1.03 C
+-CPU Araştırması
+-Engineerlerin yapıları düzenlenecek.
+-Engineerlerin limiti düzenlenecek.
+-Voodo soul reskinleri denenecek.
+
+07.06.2018 - 1.03 Release
+-Bütün güncellemeler denenecek
+
