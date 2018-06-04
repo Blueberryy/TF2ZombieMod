@@ -157,7 +157,7 @@ public Action:Regenerate(Handle:timer, any:client)
 {
 	new ClientHealth = GetClientHealth(client);
 	new maxhp = GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, client);
-	if (ClientHealth < maxhp)
+	if (ClientHealth < maxhp && GetClientTeam(client) == 3)
 	{
 		SetEntityHealth(client, ClientHealth + 5);
 	}
