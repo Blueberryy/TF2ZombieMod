@@ -1,3 +1,17 @@
+/*
+Class Base Speed Reference:
+Scout - 400
+Soldier - 240
+Pyro - 300
+Demoman - 280
+Heavy - 230
+Engineer - 300
+Medic - 320
+Sniper - 300
+Spy - 300
+*/
+
+
 #pragma semicolon 1
 #pragma tabsize 0
 #define DEBUG
@@ -29,8 +43,8 @@
 #include <clientprefs>
 
 
-//new Handle:zm_tDalgasuresi = INVALID_HANDLE;
-//new Handle:zm_tHazirliksuresi = INVALID_HANDLE;
+new Handle:zm_tDalgasuresi = INVALID_HANDLE;
+new Handle:zm_tHazirliksuresi = INVALID_HANDLE;
 new Handle:MusicCookie;
 new bool:oyun;
 new sayim;
@@ -38,19 +52,9 @@ new dalgasuresi;
 new bool:kazanan;
 new bool:deneme = false;
 //new bool:oyuncumuzik;
-//new bool:mapzf = false;
-//new bool:setupbitimi = false;
 new sayimsetup;
-//new kills[MAXPLAYERS + 1];
 new bool:timer1 = false;
-
-
-//new bool:zombiee; gereksiz
-//new dalga;
-//new maxdalga = 10;
-// red insan
-//pozisyon
-//new Float:xpoz[MAXPLAYERS + 1][3];
+new flspeed;
 
 public Plugin:myinfo = 
 {
@@ -60,55 +64,106 @@ public Plugin:myinfo =
 	version = PLUGIN_VERSION, 
 	url = "tf2türkiye.com"
 };
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
+{
+	if (GetEngineVersion() != Engine_TF2)
+	{
+		Format(error, err_max, "This plug-in only works for Team Fortress 2. // Eklenti sadece Team Fortress 2 için tasarlandı.");
+		return APLRes_Failure;
+	}
+	return APLRes_Success;
+}
 public OnMapStart()
 {
+	ServerCommand("mp_restartround 1");
 	zombimod();
 	setuptime();
 }
 public OnClientPutInServer(id)
 {
 	SDKHook(id, SDKHook_OnTakeDamage, OnTakeDamage);
-	//xpoz[id][0] = 0.0, xpoz[id][1] = 0.0, xpoz[id][2] = 0.0;
-	if (dalgasuresi > 0 && oyun && TakimdakiOyuncular(3) > 0 && !IsPlayerAlive(id) && sayim <= 0)
+}
+public OnClientConnected(id)
+{
+	if (id > 0 && IsClientInGame(id) && dalgasuresi > 0 && oyun && TakimdakiOyuncular(3) > 0 && !IsPlayerAlive(id) && sayim <= 0)
 	{
 		ChangeClientTeam(id, 3);
 	}
 }
 public OnPluginStart()
 {
+	//Konsol Komutları
 	RegConsoleCmd("sm_msc", msc);
-	//RegConsoleCmd("sm_test", test);
 	RegConsoleCmd("sm_menu", zmenu);
+	//Zamanlayıcılar
 	CreateTimer(1.0, hazirlik, _, TIMER_REPEAT);
 	CreateTimer(1.0, oyun1, _, TIMER_REPEAT);
-	CreateTimer(160.0, yazi1, _, TIMER_REPEAT);
-	CreateTimer(120.0, yazi2, _, TIMER_REPEAT);
+	CreateTimer(200.0, yazi1, _, TIMER_REPEAT);
+	CreateTimer(220.0, yazi2, _, TIMER_REPEAT);
 	CreateTimer(120.0, yazi4, _, TIMER_REPEAT);
 	CreateTimer(190.0, yazi3, _, TIMER_REPEAT);
 	CreateTimer(1.0, Timer_SetTimeSetupSayim, _, TIMER_REPEAT);
+	//Convarlar
+	zm_tHazirliksuresi = CreateConVar("zm_setup", "30", "Setup suresi/Hazirlik Suresi", FCVAR_NOTIFY | FCVAR_PLUGIN);
+	zm_tDalgasuresi = CreateConVar("zm_dalgasuresi", "380", "Setup bittikten sonraki round zamani", FCVAR_NOTIFY | FCVAR_PLUGIN);
+	//Olaylar
 	HookEvent("teamplay_round_start", round);
 	HookEvent("player_death", death);
 	HookEvent("player_spawn", spawn);
 	HookEvent("player_builtobject", event_PlayerBuiltObject);
 	HookEvent("teamplay_setup_finished", setup);
 	HookEvent("teamplay_point_captured", captured, EventHookMode_Post);
-	//HookEvent("player_team", team);
-	ServerCommand("sm_cvar tf_obj_upgrade_per_hit 0");
-	ServerCommand("sm_cvar tf_sentrygun_metal_per_shell 201");
+	HookEvent("player_hurt", HookPlayerHurt);
+	HookEvent("post_inventory_application", Event_Resupply);
+	//Esas ayarlar
+	//ServerCommand("sm_cvar tf_obj_upgrade_per_hit 0");
+	//ServerCommand("sm_cvar tf_sentrygun_metal_per_shell 201");
 	ServerCommand("mp_autoteambalance 0");
 	ServerCommand("mp_teams_unbalance_limit 0");
 	ServerCommand("mp_respawnwavetime 0 ");
 	ServerCommand("mp_restartgame 1 ");
 	ServerCommand("mp_disable_respawn_times 1 ");
 	ServerCommand("sm_cvar mp_waitingforplayers_time 0");
+	//Tercihler
 	MusicCookie = RegClientCookie("oyuncu_mzk_ayari", "Muzik Ayarı", CookieAccess_Public);
+	//Komut takibi
 	AddCommandListener(hook_JoinClass, "joinclass");
 	AddCommandListener(BlockedCommands, "autoteam");
 	AddCommandListener(BlockedCommandsteam, "jointeam");
 }
+public Action:Event_Resupply(Handle:hEvent, const String:name[], bool:dontBroadcast)
+{
+	new client = GetClientOfUserId(GetEventInt(hEvent, "userid"));
+	if (client && IsClientInGame(client) && IsPlayerAlive(client) && GetClientTeam(client) == TFTeam_Blue)
+	{
+		zombi(client);
+	}
+	
+	return Plugin_Continue;
+}
+public HookPlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
+{
+	new iUserId = GetEventInt(event, "userid");
+	new client = GetClientOfUserId(iUserId);
+	if (client > 0 && oyun && sayim <= 0)
+	{
+		if (GetClientTeam(client) == 3)
+		{
+			CreateTimer(5.0, Regenerate, client, TIMER_REPEAT);
+		}
+	}
+}
+public Action:Regenerate(Handle:timer, any:client)
+{
+	new ClientHealth = GetClientHealth(client);
+	new maxhp = GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, client);
+	if (ClientHealth < maxhp)
+	{
+		SetEntityHealth(client, ClientHealth + 5);
+	}
+}
 public Action:captured(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	kazanantakim(2);
 	oyunuresetle();
 }
 public Action:zmenu(client, args)
@@ -217,60 +272,52 @@ public Action:msc(client, args)
 ///////////////////////////////////////////////////////////////////////////////
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	//new client = GetClientOfUserId(GetEventInt(event, "userid"));
+	flspeed = 280.0;
 	oyun = false;
-	sayim = 30;
-	dalgasuresi = 380;
+	sayim = GetConVarInt(zm_tHazirliksuresi);
+	dalgasuresi = GetConVarInt(zm_tDalgasuresi);
 	kazanan = false;
 	zombimod();
 	setuptime();
 }
 public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	//decl target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (TF2_GetClientTeam(client) == TFTeam_Blue)
 	{
-		//zombiee = true; gereksiz
-		SetEntityRenderColor(client, 0, 255, 0, 0);
-		if (!oyun && sayim > 0 && sayim <= 30)
+		if (!oyun && sayim > 0 && sayim <= zm_tHazirliksuresi)
 		{
 			TF2_ChangeClientTeam(client, TFTeam_Red);
 			PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun Başlamadan Zombi Olamazsın!");
 		}
-		
-		else if (oyun && dalgasuresi > 0 && dalgasuresi < 350)
+		else if (oyun && dalgasuresi > 0 && dalgasuresi <= zm_tDalgasuresi)
 		{
 			SetEntityRenderColor(client, 0, 255, 0, 0);
-			SetEntityHealth(client, 390);
+			//SetEntityHealth(client, 390);
 			zombi(client);
+			switch (TF2_GetPlayerClass(client))
+			{
+				case TFClass_Scout:
+				{
+					SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 280.0);
+				}
+			}
 		}
-		
 	} else {
 		SetEntityRenderColor(client, 255, 255, 255, 0);
-	}
-	if (TF2_GetClientTeam(client) == TFTeam_Red)
-	{
 		switch (TF2_GetPlayerClass(client))
 		{
 			case TFClass_Spy:
 			{
 				TF2_RemoveWeaponSlot(client, 3);
 			}
-			case TFClass_Heavy:
-			{
-				if (sinifsayisi(TFClass_Heavy) > 5)
-				{
-					//
-				}
-			}
 			case TFClass_Engineer:
 			{
 				if (sinifsayisi(TFClass_Engineer) > 2)
 				{
 					TF2_SetPlayerClass(client, TFClass_Scout);
-					PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCEngineer limiti aşıldı (2)!");
 					ForcePlayerSuicide(client);
+					PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCEngineer limiti aşıldı (2)!");
 				}
 			}
 		}
@@ -280,26 +327,23 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 public Action:death(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new victim = GetClientOfUserId(GetEventInt(event, "userid"));
-	CreateTimer(0.3, dogus, victim, TIMER_FLAG_NO_MAPCHANGE);
-}
-public Action:dogus(Handle:timer, any:id)
-{
-	if (TF2_GetClientTeam(id) == TFTeam_Red && oyun)
+	//CreateTimer(0.3, dogus, victim, TIMER_FLAG_NO_MAPCHANGE);
+	if (GetClientTeam(victim) == 2 && oyun)
 	{
-		zombi(id);
-		HUD(-1.0, 0.2, 6.0, 255, 0, 0, 2, "\n☠☠☠\n%N", id);
+		zombi(victim);
+		HUD(-1.0, 0.2, 6.0, 255, 0, 0, 2, "\n☠☠☠\n%N", victim);
 	}
 }
 public Action:hazirlik(Handle:timer, any:client)
 {
 	sayim--;
-	if (sayim <= 30 && sayim > 0)
+	if (sayim <= zm_tHazirliksuresi && sayim > 0)
 	{
 		izleyicikontrolu();
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Hazırlık:%02d:%02d", sayim / 60, sayim % 60);
 		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "☠Z O M B I☠:%d", TakimdakiOyuncular(3));
 		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "I N S A N:%d", TakimdakiOyuncular(2));
-		dalgasuresi = 350;
+		dalgasuresi = GetConVarInt(zm_tDalgasuresi);
 		oyun = false;
 	} else {
 		oyun = true;
@@ -313,15 +357,16 @@ public Action:hazirlik(Handle:timer, any:client)
 public Action:oyun1(Handle:timer, any:id)
 {
 	dalgasuresi--;
-	if (dalgasuresi <= 350 && dalgasuresi > 0 && oyun)
+	if (dalgasuresi <= zm_tDalgasuresi && dalgasuresi > 0 && oyun)
 	{
 		izleyicikontrolu();
+		giriskontroluv2();
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Süre:%02d:%02d", dalgasuresi / 60, dalgasuresi % 60);
 		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "☠Z O M B I☠:%d", TakimdakiOyuncular(3));
 		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "I N S A N:%d", TakimdakiOyuncular(2));
 		for (new i = 1; i <= MaxClients; i++)
 		{
-			if (IsClientInGame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red)
+			if (IsClientInGame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == TFTeam_Red && TF2_GetPlayerClass(i) == TFClass_Engineer)
 			{
 				SetEntProp(i, Prop_Send, "m_bGlowEnabled", 1);
 			}
@@ -330,9 +375,6 @@ public Action:oyun1(Handle:timer, any:id)
 		{
 			kazanantakim(3);
 			oyunuresetle();
-		}
-		else if (TakimdakiOyuncular(2) == 1)
-		{
 		}
 	}
 	else if (dalgasuresi <= 0 && oyun)
@@ -344,7 +386,6 @@ public Action:oyun1(Handle:timer, any:id)
 		}
 	}
 }
-
 stock rastgelezombi()
 {
 	new oyuncular[MaxClients + 1], num;
@@ -357,7 +398,6 @@ stock rastgelezombi()
 	}
 	return (num == 0) ? 0 : oyuncular[GetRandomInt(0, num - 1)];
 }
-
 zombi(client)
 {
 	if (client > 0)
@@ -368,7 +408,6 @@ zombi(client)
 	}
 	CreateTimer(0.1, silah, client, TIMER_FLAG_NO_MAPCHANGE);
 }
-
 public Action:silah(Handle:timer, any:client)
 {
 	for (new i = 0; i <= 5; i++)
@@ -426,13 +465,6 @@ HUD(Float:x, Float:y, Float:Sure, r, g, b, kanal, const String:message[], any:..
 		}
 	}
 }
-HUDC(client, Float:x, Float:y, Float:Sure, r, g, b, kanal, const String:message[], any:...) //Client
-{
-	SetHudTextParams(x, y, Sure, r, g, b, 255, 0, 6.0, 0.1, 0.2);
-	new String:buffer[256];
-	VFormat(buffer, sizeof(buffer), message, 9);
-	ShowHudText(client, kanal, buffer);
-}
 /*
 ---------------------CHAT TEXTLERİ---------------------
 */
@@ -452,38 +484,37 @@ public Action:yazi4(Handle:timer, any:id)
 {
 	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun hakkında bilgi için [!menu] yazabilirsiniz.");
 }
-//buglı
-
-public Action:OnTakeDamage(id, &attacker, &inflictor, &Float:damage, &damagetype, &weapon, Float:damageForce[3], Float:damagePosition[3])
+public Action:OnTakeDamage(victim, &attacker, &inflictor, &Float:damage, &damagetype)
 {
 	
-	//test edilicek!.
-	new bool:bchanged;
-	if (valid(id) && valid(attacker))
+	if (!IsValidClient(attacker))
 	{
-		decl String:_weapon[32];
-		GetEdictClassname(inflictor, _weapon, sizeof(_weapon));
-		new String:cweapon[32];
-		GetClientWeapon(attacker, cweapon, sizeof(cweapon));
-		if (TF2_GetClientTeam(id) == TFTeam_Blue) // hasarı alan
-		{
-			if (!StrEqual(_weapon, "tf_weapon_grenadelauncher", false))
-			{
-				//damage = 25.0;
-				//bchanged = true;
-			}
-			
-			if (!StrEqual(_weapon, "tf_weapon_flamethrower", false))
-			{
-				//damage = 1.0;
-				//bchanged = true;
-			}
-		}
+		return Plugin_Continue;
 	}
-	if (bchanged)return Plugin_Changed;
-	return Plugin_Continue;
 	
+	new weaponId;
+	(attacker == inflictor) ? (weaponId = ClientWeapon(attacker)) : (weaponId = inflictor); // Karsilastirma ? IfTrue : IfFalse;
+	
+	if (IsValidEntity(weaponId) && GetClientTeam(attacker) == 3)
+	{  // We found the weaponID of the attacker
+		decl String:sWeapon[80];
+		sWeapon[0] = '\0';
+		
+		GetEntityClassname(weaponId, sWeapon, 32);
+		if (StrEqual(sWeapon, "tf_weapon_bat") || StrEqual(sWeapon, "tf_weapon_bat_fish") || 
+			StrEqual(sWeapon, "tf_weapon_shovel") || StrEqual(sWeapon, "tf_weapon_katana") || StrEqual(sWeapon, "tf_weapon_fireaxe") || 
+			StrEqual(sWeapon, "tf_weapon_bottle") || StrEqual(sWeapon, "tf_weapon_sword") || StrEqual(sWeapon, "tf_weapon_fists") || 
+			StrEqual(sWeapon, "tf_weapon_wrench") || StrEqual(sWeapon, "tf_weapon_robot_arm") || StrEqual(sWeapon, "tf_weapon_bonesaw") || 
+			StrEqual(sWeapon, "tf_weapon_club"))
+		{
+			damage = 350.0;
+			return Plugin_Changed;
+		}
+		return Plugin_Continue;
+	}
+	return Plugin_Continue;
 }
+
 // SETUP timerini değiştirdik
 //Team round timer setup bitmeden setupun yerine geçtiğinden o  classname i kullandık.
 setuptime()
@@ -500,8 +531,8 @@ setuptime()
 }
 public Action:Timer_SetTimeSetup(Handle:timer, any:ent1)
 {
-	SetVariantInt(30);
-	sayimsetup = 30;
+	SetVariantInt(GetConVarInt(zm_tHazirliksuresi));
+	sayimsetup = sayim;
 	AcceptEntityInput(ent1, "SetTime");
 }
 public Action:Timer_SetTimeSetupSayim(Handle:timer, any:id)
@@ -509,10 +540,6 @@ public Action:Timer_SetTimeSetupSayim(Handle:timer, any:id)
 	if (sayim > 0)
 	{
 		sayimsetup--;
-		if (sayimsetup == 2)
-		{
-			sayimsetup = 0;
-		}
 	}
 }
 zombimod()
@@ -524,22 +551,27 @@ zombimod()
 	}
 	decl String:mapv[6];
 	GetCurrentMap(mapv, sizeof(mapv));
-	if (!StrContains(mapv, "zf_", false)) //(strcmp("zf_%s", mapv)) 
+	if (!StrContains(mapv, "zf_", false))
 	{
-		if (sayim < 0 && sayimsetup == 0)
+		if (sayim < 0 && sayimsetup <= 1)
 		{
-			//CreateTimer(1.0, Timer_SetTime, ent, TIMER_FLAG_NO_MAPCHANGE);
 			timer1 = true;
 		} else {
 			timer1 = false;
 		}
-		//mapzf = true;
-	} else {
-		//mapzf = false;
 	}
-	if (!StrContains(mapv, "szf_", false))
+	else if (!StrContains(mapv, "szf_", false))
 	{
-		if (sayim < 0 && sayimsetup == 0)
+		if (sayim < 0 && sayimsetup <= 1)
+		{
+			timer1 = true;
+		} else {
+			timer1 = false;
+		}
+	}
+	else if (!StrContains(mapv, "zm_", false))
+	{
+		if (sayim < 0 && sayimsetup <= 1)
 		{
 			timer1 = true;
 		} else {
@@ -553,7 +585,7 @@ zombimod()
 }
 public Action:Timer_SetTime(Handle:timer, any:ent)
 {
-	SetVariantInt(350); // 600 sec ~ 10min
+	SetVariantInt(GetConVarInt(zm_tDalgasuresi)); // 600 sec ~ 10min
 	AcceptEntityInput(ent, "SetTime");
 }
 zombikacis()
@@ -595,7 +627,6 @@ oyunuresetle()
 	if (kazanan)
 	{
 		CreateTimer(15.0, res, _, TIMER_FLAG_NO_MAPCHANGE);
-		//ServerCommand("mp_restartgame 7 ");
 	}
 }
 public Action:res(Handle:timer, any:id)
@@ -606,7 +637,10 @@ public Action:res(Handle:timer, any:id)
 		if (IsClientInGame(i) && GetClientTeam(i) == 3)
 		{
 			oyuncu[num++] = i;
+			SetEntProp(i, Prop_Send, "m_lifeState", 2);
 			ChangeClientTeam(i, 2);
+			SetEntProp(i, Prop_Send, "m_lifeState", 0);
+			TF2_RespawnPlayer(i);
 		}
 	}
 }
@@ -622,10 +656,10 @@ izleyicikontrolu()
 			if (!oyun && sayim > 0)
 			{
 				ChangeClientTeam(i, 2);
-				PrintToChat(i, "[TF2Z]Oyun Başlarken İzleyici Mod'a geçilemez");
+				PrintToChat(i, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun Başlarken İzleyici Mod'a geçilemez");
 			} else {
 				ChangeClientTeam(i, 3);
-				PrintToChat(i, "[TF2Z]Oyun Başlarken İzleyici Mod'a geçilemez");
+				PrintToChat(i, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun Başlarken İzleyici Mod'a geçilemez");
 			}
 		}
 	}
@@ -637,7 +671,6 @@ MuzikDurdurma(client)
 }
 MuzikAc(client)
 {
-	//sesler = true;
 	PrintToChat(client, "[TF2Z]Müzikler açıldı.");
 }
 
@@ -655,22 +688,23 @@ OyuncuMuzikAyari(client, bool:acik)
 	if (acik)
 	{
 		strCookie = "1";
-		PrintToChat(client, "acik");
 	} else {
 		strCookie = "0";
-		PrintToChat(client, "kapali");
 		SetClientCookie(client, MusicCookie, strCookie);
 	}
 }
-valid(id)
+stock bool:IsValidClient(client, bool:nobots = true)
 {
-	if (id > 0 && id <= MaxClients && IsClientInGame(id))
+	if (client <= 0 || client > MaxClients || !IsClientConnected(client) || (nobots && IsFakeClient(client)))
 	{
-		return true;
+		return false;
 	}
-	return false;
+	return IsClientInGame(client);
 }
-
+ClientWeapon(client)
+{
+	return GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+}
 //Menü Ayarları
 Yardim(client)
 {
@@ -753,8 +787,8 @@ public mzkv2(client)
 	new Handle:panel = CreatePanel();
 	
 	SetPanelTitle(panel, "Tercihler - Müzik");
-	DrawPanelItem(panel, "Aç.");
-	DrawPanelItem(panel, "Kapa.");
+	DrawPanelItem(panel, "Aç");
+	DrawPanelItem(panel, "Kapa");
 	DrawPanelItem(panel, "Yardım menüsüne geri dön.");
 	DrawPanelItem(panel, "Kapat");
 	SendPanelToClient(panel, client, panel_HandleMuzik, 10);
@@ -773,7 +807,7 @@ public panel_HandleMuzik(Handle:menu, MenuAction:action, param1, param2)
 		}
 	}
 }
-sinifsayisi(siniff) // eski metot ile siniff yapabilirdim fakat tag mismatch warning verir.
+sinifsayisi(siniff)
 {
 	new iSinifNum;
 	for (new i = 1; i <= MaxClients; i++)
@@ -784,4 +818,12 @@ sinifsayisi(siniff) // eski metot ile siniff yapabilirdim fakat tag mismatch war
 		}
 	}
 	return iSinifNum;
+}
+giriskontroluv2()
+{
+	new client = GetClientOfUserId(client);
+	if (client > 0 && TakimdakiOyuncular(3) > 0 && !IsPlayerAlive(client) && GetClientTeam(client) == 2 && oyun)
+	{
+		ChangeClientTeam(client, 3);
+	}
 } 
