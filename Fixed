@@ -9,3 +9,7 @@ Xpoz silindi.
 Engineerlerin yapılarının seviye limiti kaldırıldı.
 Engineer-Scout bugu düzeltildi.(En azından öyle görünüyor.)
 --5.06.2018--
+Oyuncuların sınıf değiştirip zombiyken tekrar insan olması düzeltildi.
+Oyuncular artık takım değiştirmeye kalkarsa direk blocklanıcak yani öldürmeden hiç bir şey olmadan eksi takımında kalıcak.(BlockedCommands)
+Hp regen düzenlendi.
+Cpu sorunu büyük ihtimalle maplarla ilgili.
