@@ -72,7 +72,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	return APLRes_Success;
 }
 public OnMapStart()
-{ //Ayarların yüklenmesi.
+{  //Ayarların yüklenmesi.
 	zombimod();
 	setuptime();
 	ServerCommand("mp_restartround 1");
@@ -339,6 +339,11 @@ public Action:death(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new victim = GetClientOfUserId(GetEventInt(event, "userid"));
 	//CreateTimer(0.3, dogus, victim, TIMER_FLAG_NO_MAPCHANGE);
+	//new deathFlags = GetUserFlagBits(victim);
+	if (GetEventInt(event, "death_flags") & 32) // Sahte ölüm
+	{
+		return;
+	}
 	if (GetClientTeam(victim) == 2 && oyun)
 	{
 		zombi(victim);
@@ -584,15 +589,15 @@ zombimod()
 			timer1 = false;
 		}
 	}
-	else if(!StrContains(mapv, "zs_", false))
+	else if (!StrContains(mapv, "zs_", false))
 	{
-		if(sayim < 0 && sayimsetup <= 1)
+		if (sayim < 0 && sayimsetup <= 1)
 		{
 			timer1 = true;
 		} else {
 			timer1 = false;
 		}
-        }
+	}
 	if (timer1)
 	{
 		CreateTimer(1.0, Timer_SetTime, ent, TIMER_FLAG_NO_MAPCHANGE);
