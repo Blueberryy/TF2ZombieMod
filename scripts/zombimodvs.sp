@@ -592,7 +592,7 @@ zombimod()
 		} else {
 			timer1 = false;
 		}
-    }
+        }
 	if (timer1)
 	{
 		CreateTimer(1.0, Timer_SetTime, ent, TIMER_FLAG_NO_MAPCHANGE);
