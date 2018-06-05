@@ -139,6 +139,7 @@ public Action:Event_Resupply(Handle:hEvent, const String:name[], bool:dontBroadc
 	
 	return Plugin_Continue;
 }
+
 public HookPlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new iUserId = GetEventInt(event, "userid");
@@ -157,8 +158,12 @@ public Action:Regenerate(Handle:timer, any:client)
 	new maxhp = GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, client); //Max hp
 	if (client > 0 && IsClientInGame(client) && ClientHealth < maxhp && GetClientTeam(client) == 3 && TF2_GetPlayerClass(client) != TFClass_Medic) //Oyuncunun o an sahip olduğu hp maxhp den büyük değilse regen verilebilir.
 	{
-		SetEntProp(client, Prop_Data, "m_iHealth", ClientHealth + 5); // +5hp
+		SetEntProp(client, Prop_Data, "m_iHealth", ClientHealth + 11); // +5hp
 	}
+	if(ClientHealth >= maxhp)
+	{
+		KillTimer(timer);
+    }
 }
 public Action:captured(Handle:event, const String:name[], bool:dontBroadcast)
 {
