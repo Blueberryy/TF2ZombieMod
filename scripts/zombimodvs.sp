@@ -160,10 +160,10 @@ public Action:Regenerate(Handle:timer, any:client)
 	{
 		SetEntProp(client, Prop_Data, "m_iHealth", ClientHealth + 11); // +5hp
 	}
-	if(ClientHealth >= maxhp)
+	if (ClientHealth >= maxhp)
 	{
 		KillTimer(timer);
-    }
+	}
 }
 public Action:captured(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -231,8 +231,8 @@ public Action:BlockedCommandsteam(client, const String:command[], argc)
 		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun esnasında ya da setup zamanında takım değiştirilemez!");
 		return Plugin_Handled; // Engellemeyi uygula
 	}
-	if (!oyun && sayim > 0 && TF2_GetClientTeam(client) != TFTeam_Blue && TF2_GetClientTeam(client) != TFTeam_Spectator) // Round başlamadığı zaman oyuncular zombi olmaya çalışırsa engellensin.
-	{
+	if (!oyun && sayim > 0 && sayim < 10 && TF2_GetClientTeam(client) != TFTeam_Blue && TF2_GetClientTeam(client) != TFTeam_Spectator) // Round başlamadığı zaman oyuncular zombi olmaya çalışırsa engellensin.
+	{  // 10 saniye kala kimse takım değiştiremez.
 		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun başlamadan zombi olamazsın!");
 		return Plugin_Handled; //Engellemeyi uygula
 	}
@@ -789,4 +789,4 @@ discizgi()
 			//SetVariantColor(color);
 		}
 	}
-}
+} 
