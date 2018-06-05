@@ -147,7 +147,7 @@ public HookPlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 	{
 		if (GetClientTeam(client) == 3)
 		{
-			CreateTimer(6.0, Regenerate, client, TIMER_REPEAT); //Health regen zamanlayıcısı (5 saniyede +hp)
+			CreateTimer(4.0, Regenerate, client, TIMER_REPEAT); //Health regen zamanlayıcısı (5 saniyede +hp)
 		}
 	}
 }
