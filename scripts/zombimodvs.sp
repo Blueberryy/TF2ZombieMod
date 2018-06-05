@@ -147,7 +147,7 @@ public HookPlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 	{
 		if (GetClientTeam(client) == 3)
 		{
-			CreateTimer(10.0, Regenerate, client, TIMER_REPEAT); //Health regen zamanlayıcısı (5 saniyede +hp)
+			CreateTimer(6.0, Regenerate, client, TIMER_REPEAT); //Health regen zamanlayıcısı (5 saniyede +hp)
 		}
 	}
 }
@@ -155,7 +155,7 @@ public Action:Regenerate(Handle:timer, any:client)
 {
 	new ClientHealth = GetClientHealth(client); //Şuanki hp
 	new maxhp = GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, client); //Max hp
-	if (client > 0 && IsClientInGame(client) && ClientHealth <= maxhp && GetClientTeam(client) == 3) //Oyuncunun o an sahip olduğu hp maxhp den büyük değilse regen verilebilir.
+	if (client > 0 && IsClientInGame(client) && ClientHealth < maxhp && GetClientTeam(client) == 3 && TF2_GetPlayerClass(client) != TFClass_Medic) //Oyuncunun o an sahip olduğu hp maxhp den büyük değilse regen verilebilir.
 	{
 		SetEntProp(client, Prop_Data, "m_iHealth", ClientHealth + 5); // +5hp
 	}
@@ -310,6 +310,7 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 		}
 	} else {
 		SetEntityRenderColor(client, 255, 255, 255, 0);
+		discizgi();
 		switch (TF2_GetPlayerClass(client))
 		{
 			case TFClass_Spy:
@@ -569,6 +570,15 @@ zombimod()
 			timer1 = false;
 		}
 	}
+	else if (!StrContains(mapv, "zom_", false))
+	{
+		if (sayim < 0 && sayimsetup <= 1)
+		{
+			timer1 = true;
+		} else {
+			timer1 = false;
+		}
+	}
 	if (timer1)
 	{
 		CreateTimer(1.0, Timer_SetTime, ent, TIMER_FLAG_NO_MAPCHANGE);
@@ -756,4 +766,22 @@ sinifsayisi(siniff)
 		}
 	}
 	return iSinifNum;
-} 
+}
+discizgi()
+{
+	//new color[4];
+	//color[0] = 255;
+	//color[1] = 255;
+	//color[2] = 255;
+	//color[3] = 255;
+	new oyuncu[MaxClients + 1], num;
+	for (new i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) == 2)
+		{
+			oyuncu[num++] = i;
+			SetEntProp(i, Prop_Send, "m_bGlowEnabled", 1);
+			//SetVariantColor(color);
+		}
+	}
+}
