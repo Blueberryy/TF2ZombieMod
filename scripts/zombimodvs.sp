@@ -72,10 +72,10 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	return APLRes_Success;
 }
 public OnMapStart()
-{
-	ServerCommand("mp_restartround 1"); //Ayarların yüklenmesi.
+{ //Ayarların yüklenmesi.
 	zombimod();
 	setuptime();
+	ServerCommand("mp_restartround 1");
 }
 public OnClientPutInServer(id)
 {
@@ -584,6 +584,15 @@ zombimod()
 			timer1 = false;
 		}
 	}
+	else if(!StrContains(mapv, "zs_", false))
+	{
+		if(sayim < 0 && sayimsetup <= 1)
+		{
+			timer1 = true;
+		} else {
+			timer1 = false;
+		}
+    }
 	if (timer1)
 	{
 		CreateTimer(1.0, Timer_SetTime, ent, TIMER_FLAG_NO_MAPCHANGE);
