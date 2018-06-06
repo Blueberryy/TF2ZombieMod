@@ -62,7 +62,7 @@ public Plugin:myinfo =
 	author = PLUGIN_AUTHOR, 
 	description = "", 
 	version = PLUGIN_VERSION, 
-	url = ""
+	url = "tf2türkiye.com"
 };
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
@@ -180,7 +180,7 @@ public Action:Regenerate(Handle:timer, any:client)
 		new maxhp = GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, client); //Max hp
 		if (ClientHealth < maxhp && GetClientTeam(client) == 3 && TF2_GetPlayerClass(client) != TFClass_Medic) //Oyuncunun o an sahip olduğu hp maxhp den büyük değilse regen verilebilir.
 		{
-			SetEntProp(client, Prop_Data, "m_iHealth", ClientHealth + 11); // +5hp
+			SetEntProp(client, Prop_Data, "m_iHealth", ClientHealth + 15); // +5hp
 		}
 		if (ClientHealth >= maxhp)
 		{
