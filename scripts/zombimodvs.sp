@@ -45,6 +45,7 @@ Spy - 300
 
 new Handle:zm_tDalgasuresi = INVALID_HANDLE;
 new Handle:zm_tHazirliksuresi = INVALID_HANDLE;
+new Handle:zm_hTekvurus = INVALID_HANDLE;
 new Handle:MusicCookie;
 new bool:oyun;
 new sayim;
@@ -105,6 +106,7 @@ public OnPluginStart()
 	//Convarlar
 	zm_tHazirliksuresi = CreateConVar("zm_setup", "30", "Setup suresi/Hazirlik Suresi", FCVAR_NOTIFY | FCVAR_PLUGIN);
 	zm_tDalgasuresi = CreateConVar("zm_dalgasuresi", "380", "Setup bittikten sonraki round zamani", FCVAR_NOTIFY | FCVAR_PLUGIN);
+	zm_hTekvurus = CreateConVar("zm_tekvurus", "1", "Zombiler tek vurusta insanlari infekte edebilsin (1/0) 0 kapatir.", FCVAR_NOTIFY | FCVAR_PLUGIN);
 	//Olaylar
 	HookEvent("teamplay_round_start", round);
 	HookEvent("player_death", death);
@@ -158,9 +160,16 @@ public HookPlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 	{
 		return;
 	}
-	if (client != attacker && attacker && TF2_GetPlayerClass(attacker) != TFClass_Scout && GetClientTeam(attacker) != 2 && GetClientTeam(attacker) != 1)//Scoutun topları tek atmamalı.
+	if (GetEventInt(event, "death_flags") & 32)
 	{
-		zombi(client);
+		return;
+	}
+	if (GetConVarInt(zm_hTekvurus) == 1)
+	{
+		if (client != attacker && attacker && TF2_GetPlayerClass(attacker) != TFClass_Scout && GetClientTeam(attacker) != 2 && GetClientTeam(attacker) != 1) //Scoutun topları tek atmamalı.
+		{
+			zombi(client);
+		}
 	}
 }
 public Action:Regenerate(Handle:timer, any:client)
@@ -822,4 +831,4 @@ discizgi()
 			//SetVariantColor(color);
 		}
 	}
-}
+} 
