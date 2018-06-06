@@ -158,7 +158,7 @@ public HookPlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 	{
 		return;
 	}
-	if (attacker && TF2_GetPlayerClass(attacker) != TFClass_Scout) //Scoutun topları tek atmamalı.
+	if (client != attacker && attacker && TF2_GetPlayerClass(attacker) != TFClass_Scout) //Scoutun topları tek atmamalı.
 	{
 		zombi(client);
 	}
