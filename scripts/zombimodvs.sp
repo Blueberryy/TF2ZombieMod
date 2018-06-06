@@ -42,7 +42,6 @@ Spy - 300
 #include <sdkhooks>
 #include <clientprefs>
 
-
 new Handle:zm_tDalgasuresi = INVALID_HANDLE;
 new Handle:zm_tHazirliksuresi = INVALID_HANDLE;
 new Handle:zm_hTekvurus = INVALID_HANDLE;
@@ -55,6 +54,7 @@ new bool:kazanan;
 new sayimsetup;
 new bool:timer1 = false;
 new flspeed;
+
 
 public Plugin:myinfo = 
 {
@@ -82,6 +82,10 @@ public OnMapStart()
 public OnClientPutInServer(id)
 {
 	SDKHook(id, SDKHook_OnTakeDamage, OnTakeDamage);
+	if (id > 0 && IsClientInGame(id) && dalgasuresi > 0 && oyun && TakimdakiOyuncular(3) > 0 && !IsPlayerAlive(id) && sayim <= 0)
+	{
+		ChangeClientTeam(id, 3);
+	}
 }
 public OnClientConnected(id)
 {
@@ -139,7 +143,6 @@ public Action:Event_Resupply(Handle:hEvent, const String:name[], bool:dontBroadc
 	{
 		zombi(client); //Oyuncular resupply cabinete dokunduğu zaman silahlarını tekrar silmek için. (Zombilerin)
 	}
-	
 	return Plugin_Continue;
 }
 
@@ -152,7 +155,7 @@ public HookPlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 	{
 		if (GetClientTeam(client) == 3)
 		{
-			CreateTimer(4.0, Regenerate, client, TIMER_REPEAT); //Health regen zamanlayıcısı (5 saniyede +hp)
+			//CreateTimer(3.0, Regenerate, client, TIMER_FLAG_NO_MAPCHANGE); //Health regen zamanlayıcısı (5 saniyede +hp)
 		}
 	}
 	new damagebits = GetEventInt(event, "damagebits");
@@ -169,22 +172,6 @@ public HookPlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 		if (client != attacker && attacker && TF2_GetPlayerClass(attacker) != TFClass_Scout && GetClientTeam(attacker) != 2 && GetClientTeam(attacker) != 1) //Scoutun topları tek atmamalı.
 		{
 			zombi(client);
-		}
-	}
-}
-public Action:Regenerate(Handle:timer, any:client)
-{
-	if (client > 0 && IsClientInGame(client))
-	{
-		new ClientHealth = GetClientHealth(client); //Şuanki hp
-		new maxhp = GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, client); //Max hp
-		if (ClientHealth < maxhp && GetClientTeam(client) == 3 && TF2_GetPlayerClass(client) != TFClass_Medic) //Oyuncunun o an sahip olduğu hp maxhp den büyük değilse regen verilebilir.
-		{
-			SetEntProp(client, Prop_Data, "m_iHealth", ClientHealth + 15); // +5hp
-		}
-		if (ClientHealth >= maxhp)
-		{
-			KillTimer(timer);
 		}
 	}
 }
@@ -304,12 +291,36 @@ public Action:msc(client, args)
 ///////////////////////////////////////////////////////////////////////////////
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 {
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	oyun = false; // Setup bitmeden round başlayamaz
 	sayim = GetConVarInt(zm_tHazirliksuresi); //Setup zamanlayicisinin convarın değerini alması için
 	dalgasuresi = GetConVarInt(zm_tDalgasuresi); //Round zamanlayicisinin convarın değerini alması için
 	kazanan = false;
 	zombimod();
 	setuptime();
+	if (client > 0 && IsClientInGame(client) && TF2_GetClientTeam(client) == TFTeam_Spectator)
+	{
+		SetEntProp(client, Prop_Send, "m_lifeState", 2);
+		ChangeClientTeam(client, 2);
+		SetEntProp(client, Prop_Send, "m_lifeState", 0);
+	}
+}
+public Action:Regenerate(Handle:timer, any:client)
+{
+	if (client > 0 && IsClientInGame(client))
+	{
+		new ClientHealth = GetClientHealth(client); //Şuanki hp
+		new maxhp = GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, client); //Max hp
+		if (ClientHealth < maxhp && GetClientTeam(client) == 3 && TF2_GetPlayerClass(client) != TFClass_Medic) //Oyuncunun o an sahip olduğu hp maxhp den büyük değilse regen verilebilir.
+		{
+			SetEntProp(client, Prop_Data, "m_iHealth", ClientHealth + 15); // +5hp
+		}
+		if (ClientHealth >= maxhp)
+		{
+			//SetEntityHealth(client, maxhp);
+			KillTimer(timer);
+		}
+	}
 }
 public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -433,12 +444,14 @@ stock rastgelezombi()
 }
 zombi(client)
 {
-	if (client > 0)
+	if (client > 0 && IsClientInGame(client))
 	{
 		SetEntProp(client, Prop_Send, "m_lifeState", 2);
 		ChangeClientTeam(client, 3);
 		SetEntProp(client, Prop_Send, "m_lifeState", 0);
 		SetEntityRenderColor(client, 0, 255, 0, 0);
+		//new HP = GetClientHealth(client)
+		SetEntityHealth(client, 450);
 	}
 	CreateTimer(0.1, silah, client, TIMER_FLAG_NO_MAPCHANGE);
 }
