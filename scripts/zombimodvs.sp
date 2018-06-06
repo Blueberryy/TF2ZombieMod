@@ -53,6 +53,7 @@ new bool:kazanan;
 //new bool:oyuncumuzik;
 new sayimsetup;
 new bool:timer1 = false;
+new flspeed;
 
 public Plugin:myinfo = 
 {
@@ -144,6 +145,7 @@ public HookPlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new iUserId = GetEventInt(event, "userid");
 	new client = GetClientOfUserId(iUserId);
+	new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
 	if (client > 0 && IsClientInGame(client) && oyun && sayim <= 0)
 	{
 		if (GetClientTeam(client) == 3)
@@ -151,18 +153,30 @@ public HookPlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 			CreateTimer(4.0, Regenerate, client, TIMER_REPEAT); //Health regen zamanlayıcısı (5 saniyede +hp)
 		}
 	}
+	new damagebits = GetEventInt(event, "damagebits");
+	if (damagebits & DMG_FALL)
+	{
+		return;
+	}
+	if (attacker && TF2_GetPlayerClass(attacker) != TFClass_Scout) //Scoutun topları tek atmamalı.
+	{
+		zombi(client);
+	}
 }
 public Action:Regenerate(Handle:timer, any:client)
 {
-	new ClientHealth = GetClientHealth(client); //Şuanki hp
-	new maxhp = GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, client); //Max hp
-	if (client > 0 && IsClientInGame(client) && ClientHealth < maxhp && GetClientTeam(client) == 3 && TF2_GetPlayerClass(client) != TFClass_Medic) //Oyuncunun o an sahip olduğu hp maxhp den büyük değilse regen verilebilir.
+	if (client > 0 && IsClientInGame(client))
 	{
-		SetEntProp(client, Prop_Data, "m_iHealth", ClientHealth + 11); // +5hp
-	}
-	if (ClientHealth >= maxhp)
-	{
-		KillTimer(timer);
+		new ClientHealth = GetClientHealth(client); //Şuanki hp
+		new maxhp = GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, client); //Max hp
+		if (ClientHealth < maxhp && GetClientTeam(client) == 3 && TF2_GetPlayerClass(client) != TFClass_Medic) //Oyuncunun o an sahip olduğu hp maxhp den büyük değilse regen verilebilir.
+		{
+			SetEntProp(client, Prop_Data, "m_iHealth", ClientHealth + 11); // +5hp
+		}
+		if (ClientHealth >= maxhp)
+		{
+			KillTimer(timer);
+		}
 	}
 }
 public Action:captured(Handle:event, const String:name[], bool:dontBroadcast)
@@ -240,7 +254,7 @@ public Action:BlockedCommandsteam(client, const String:command[], argc)
 }
 public Action:hook_JoinClass(client, const String:command[], argc)
 {
-	if (dalgasuresi > 0 && oyun && TF2_GetClientTeam(client) == TFTeam_Red)
+	if (sayim <= 0 && oyun && TF2_GetClientTeam(client) == TFTeam_Red)
 	{
 		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun esnasında sınıf değiştiremezsin!");
 		return Plugin_Handled;
@@ -309,7 +323,8 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 			{
 				case TFClass_Scout:
 				{
-					SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", 280.0);
+					flspeed = 280.0;
+					SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flspeed);
 				}
 			}
 		}
@@ -326,8 +341,10 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 			{
 				if (sinifsayisi(TFClass_Engineer) > 2)
 				{
+					SetEntProp(client, Prop_Send, "m_lifeState", 2);
 					TF2_SetPlayerClass(client, TFClass_Scout);
-					ForcePlayerSuicide(client);
+					SetEntProp(client, Prop_Send, "m_lifeState", 0);
+					TF2_RespawnPlayer(client);
 					PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCEngineer limiti aşıldı (2)!");
 				}
 			}
@@ -491,12 +508,10 @@ public Action:yazi4(Handle:timer, any:id)
 }
 public Action:OnTakeDamage(victim, &attacker, &inflictor, &Float:damage, &damagetype)
 {
-	
 	if (!IsValidClient(attacker))
 	{
 		return Plugin_Continue;
 	}
-	
 	new weaponId;
 	(attacker == inflictor) ? (weaponId = ClientWeapon(attacker)) : (weaponId = inflictor); // Karsilastirma ? IfTrue : IfFalse;
 	
@@ -504,7 +519,6 @@ public Action:OnTakeDamage(victim, &attacker, &inflictor, &Float:damage, &damage
 	{  // weaponId != -1
 		decl String:sWeapon[80];
 		sWeapon[0] = '\0';
-		
 		GetEntityClassname(weaponId, sWeapon, 32);
 		if (StrEqual(sWeapon, "tf_weapon_bat") || StrEqual(sWeapon, "tf_weapon_bat_fish") || 
 			StrEqual(sWeapon, "tf_weapon_shovel") || StrEqual(sWeapon, "tf_weapon_katana") || StrEqual(sWeapon, "tf_weapon_fireaxe") || 
@@ -512,8 +526,8 @@ public Action:OnTakeDamage(victim, &attacker, &inflictor, &Float:damage, &damage
 			StrEqual(sWeapon, "tf_weapon_wrench") || StrEqual(sWeapon, "tf_weapon_robot_arm") || StrEqual(sWeapon, "tf_weapon_bonesaw") || 
 			StrEqual(sWeapon, "tf_weapon_club"))
 		{
-			damage = 350.0;
-			return Plugin_Changed;
+			//damage = 350.0;
+			//return Plugin_Changed;
 		}
 		return Plugin_Continue;
 	}
