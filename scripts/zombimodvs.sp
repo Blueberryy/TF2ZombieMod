@@ -158,7 +158,7 @@ public HookPlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 	{
 		return;
 	}
-	if (client != attacker && attacker && TF2_GetPlayerClass(attacker) != TFClass_Scout) //Scoutun topları tek atmamalı.
+	if (client != attacker && attacker && TF2_GetPlayerClass(attacker) != TFClass_Scout && GetClientTeam(attacker) != 2 && GetClientTeam(attacker) != 1)//Scoutun topları tek atmamalı.
 	{
 		zombi(client);
 	}
@@ -439,6 +439,7 @@ public Action:silah(Handle:timer, any:client)
 	{
 		if (client > 0 && i != 2 && TF2_GetClientTeam(client) == TFTeam_Blue)
 		{
+			//TF2_RemoveWeaponSlot(client, i);
 			TF2_RemoveWeaponSlot(client, i);
 		}
 	}
@@ -506,6 +507,7 @@ public Action:yazi4(Handle:timer, any:id)
 {
 	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun hakkında bilgi için [!menu] yazabilirsiniz.");
 }
+
 public Action:OnTakeDamage(victim, &attacker, &inflictor, &Float:damage, &damagetype)
 {
 	if (!IsValidClient(attacker))
@@ -533,6 +535,7 @@ public Action:OnTakeDamage(victim, &attacker, &inflictor, &Float:damage, &damage
 	}
 	return Plugin_Continue;
 }
+
 setuptime()
 {
 	new ent1 = FindEntityByClassname(MaxClients + 1, "team_round_timer");
@@ -682,10 +685,12 @@ stock bool:IsValidClient(client, bool:nobots = true)
 	}
 	return IsClientInGame(client);
 }
+
 ClientWeapon(client)
 {
 	return GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
 }
+
 //Menü Ayarları
 Yardim(client)
 {
@@ -817,4 +822,4 @@ discizgi()
 			//SetVariantColor(color);
 		}
 	}
-} 
+}
