@@ -136,6 +136,25 @@ public OnPluginStart()
 	AddCommandListener(BlockedCommands, "autoteam");
 	AddCommandListener(BlockedCommandsteam, "jointeam");
 }
+public OnGameFrame() // Cpu kullanımı arttırabilir ama dedicated sunucuda arttırmıyordu şuanlık buraya ekstra bir check eklemicem.
+{
+	new id = GetClientOfUserId(id);
+	if(id > 0  && IsClientInGame(id) && TF2_GetClientTeam(id) == TFTeam_Spectator)
+	{
+		if(oyun)
+		{
+			ChangeClientTeam(id, 3);
+			TF2_SetPlayerClass(id, TFClass_Scout);
+			TF2_RespawnPlayer(id);
+	    }
+	    if(sayim > 0)
+	    {
+	        ChangeClientTeam(id, 2);
+	    	TF2_SetPlayerClass(id, TFClass_Medic);
+	    	TF2_RespawnPlayer(id);
+	    }
+    }
+}
 public Action:Event_Resupply(Handle:hEvent, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(hEvent, "userid"));
@@ -241,8 +260,8 @@ public Action:BlockedCommandsteam(client, const String:command[], argc)
 		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun esnasında ya da setup zamanında takım değiştirilemez!");
 		return Plugin_Handled; // Engellemeyi uygula
 	}
-	if (!oyun && sayim > 0 && sayim < 10 && TF2_GetClientTeam(client) != TFTeam_Blue && TF2_GetClientTeam(client) != TFTeam_Spectator) // Round başlamadığı zaman oyuncular zombi olmaya çalışırsa engellensin.
-	{  // 10 saniye kala kimse takım değiştiremez.
+	if (!oyun && sayim > 0 && sayim < 5 && TF2_GetClientTeam(client) != TFTeam_Blue && TF2_GetClientTeam(client) != TFTeam_Spectator) // Round başlamadığı zaman oyuncular zombi olmaya çalışırsa engellensin.
+	{  // 5 saniye kala kimse takım değiştiremez. oyuncular reddeyse
 		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun başlamadan zombi olamazsın!");
 		return Plugin_Handled; //Engellemeyi uygula
 	}
@@ -261,6 +280,7 @@ public Action:setup(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	zombimod(); //Round timerin işlemesi için
 	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCHazırlık bitti!");
+    izleyicikontrolu();
 }
 public Action:event_PlayerBuiltObject(Handle:event, const String:name[], bool:dontBroadcast) //Garip bir şekilde çalışmıyor.
 {
@@ -291,19 +311,12 @@ public Action:msc(client, args)
 ///////////////////////////////////////////////////////////////////////////////
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	oyun = false; // Setup bitmeden round başlayamaz
 	sayim = GetConVarInt(zm_tHazirliksuresi); //Setup zamanlayicisinin convarın değerini alması için
 	dalgasuresi = GetConVarInt(zm_tDalgasuresi); //Round zamanlayicisinin convarın değerini alması için
 	kazanan = false;
 	zombimod();
 	setuptime();
-	if (client > 0 && IsClientInGame(client) && TF2_GetClientTeam(client) == TFTeam_Spectator)
-	{
-		SetEntProp(client, Prop_Send, "m_lifeState", 2);
-		ChangeClientTeam(client, 2);
-		SetEntProp(client, Prop_Send, "m_lifeState", 0);
-	}
 }
 public Action:Regenerate(Handle:timer, any:client)
 {
@@ -451,7 +464,7 @@ zombi(client)
 		SetEntProp(client, Prop_Send, "m_lifeState", 0);
 		SetEntityRenderColor(client, 0, 255, 0, 0);
 		//new HP = GetClientHealth(client)
-		SetEntityHealth(client, 450);
+		SetEntityHealth(client, 315);
 	}
 	CreateTimer(0.1, silah, client, TIMER_FLAG_NO_MAPCHANGE);
 }
@@ -663,9 +676,9 @@ public Action:res(Handle:timer, any:id)
 		if (IsClientInGame(i) && GetClientTeam(i) == 3)
 		{
 			oyuncu[num++] = i;
-			SetEntProp(i, Prop_Send, "m_lifeState", 2); //Öldürmeden swap teams yapmak için.
+			SetEntProp(i, Prop_Send, "m_lifeState", 2);
 			ChangeClientTeam(i, 2);
-			SetEntProp(i, Prop_Send, "m_lifeState", 0); //Öldürmeden swap teams yapmak için.
+			SetEntProp(i, Prop_Send, "m_lifeState", 0);
 			TF2_RespawnPlayer(i);
 		}
 	}
@@ -845,3 +858,15 @@ discizgi()
 		}
 	}
 } 
+izleyicikontrolu()
+{
+	for (new i = 1; i <= MaxClients; i++)
+	{
+		if(IsClientInGame(i) && TF2_GetClientTeam(i) == TFTeam_Spectator)
+		{
+			ChangeClientTeam(i, 3);
+			TF2_SetPlayerClass(i, TFClass_Scout);
+			TF2_RespawnPlayer(i);
+	    }
+    }
+}
