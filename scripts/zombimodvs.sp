@@ -152,7 +152,7 @@ public OnGameFrame() // Cpu kullanımı arttırabilir ama dedicated sunucuda art
 			TF2_SetPlayerClass(id, TFClass_Scout);
 			TF2_RespawnPlayer(id);
 		}
-		if (TakimdakiOyuncular(3) == 0 && sayim > 0) 
+		if (TakimdakiOyuncular(3) == 0 && sayim > 0)
 		{
 			ChangeClientTeam(id, 2);
 			TF2_SetPlayerClass(id, TFClass_Medic);
@@ -424,17 +424,17 @@ public Action:hazirlik(Handle:timer, any:client)
 		if (TakimdakiOyuncular(3) == 0 && num > 1)
 		{
 			new num2; //belirtilen deger
-			switch(num)
+			switch (num)
 			{
 				//num = num2 - num
 				case 0, 1, 2, 3, 4, 5, 6, 7, 8, 9:num2 = 1; // case 0-5
 				case 10, 11, 12, 13, 14, 15, 16, 17, 18, 19:num2 = 2; // case 5-10
 				case 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32:num2 = 4; // case 10-15
-		        }
+			}
 			for (new i = 0; i <= num2; i++)
 			{
 				zombi(rastgelezombi());
-		        }
+			}
 		}
 	}
 }
