@@ -260,11 +260,13 @@ public Action:BlockedCommandsteam(client, const String:command[], argc)
 		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun esnasında ya da setup zamanında takım değiştirilemez!");
 		return Plugin_Handled; // Engellemeyi uygula
 	}
+	/*
 	if (!oyun && sayim > 0 && sayim < 5 && TF2_GetClientTeam(client) != TFTeam_Blue && TF2_GetClientTeam(client) != TFTeam_Spectator) // Round başlamadığı zaman oyuncular zombi olmaya çalışırsa engellensin.
 	{  // 5 saniye kala kimse takım değiştiremez. oyuncular reddeyse
 		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun başlamadan zombi olamazsın!");
 		return Plugin_Handled; //Engellemeyi uygula
 	}
+	*/
 	return Plugin_Continue; // Eğer öyle bir olay yoksa da plugin çalışmaya devam edicek.
 }
 public Action:hook_JoinClass(client, const String:command[], argc)
