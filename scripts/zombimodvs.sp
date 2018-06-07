@@ -77,7 +77,7 @@ public OnMapStart()
 {  //Ayarların yüklenmesi.
 	zombimod();
 	setuptime();
-	ServerCommand("mp_restartround 1");
+	ServerCommand("mp_restartgame 1 ");
 }
 public OnClientPutInServer(id)
 {
@@ -407,8 +407,8 @@ public Action:hazirlik(Handle:timer, any:client)
 	{
 		//izleyicikontrolu();
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Setup:%02d:%02d", sayim / 60, sayim % 60);
-		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "☠Z O M B I☠:%d", TakimdakiOyuncular(3));
-		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "I N S A N:%d", TakimdakiOyuncular(2));
+		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "☠Zombi☠:%d", TakimdakiOyuncular(3));
+		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "Insan:%d", TakimdakiOyuncular(2));
 		dalgasuresi = GetConVarInt(zm_tDalgasuresi);
 		oyun = false;
 	} else {
