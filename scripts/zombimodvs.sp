@@ -82,21 +82,18 @@ public OnClientPutInServer(id)
 {
 	SDKHook(id, SDKHook_OnTakeDamage, OnTakeDamage);
 	
-	if (id > 0 && IsClientInGame(id) && dalgasuresi > 0 && oyun && TakimdakiOyuncular(3) > 0 && !IsPlayerAlive(id) && sayim <= 0)
+	if (id > 0 && IsClientInGame(id) && oyun && TakimdakiOyuncular(3) > 0 && sayim <= 0)
 	{
 		ChangeClientTeam(id, 3);
-		TF2_RespawnPlayer(id);
-		TF2_SetPlayerClass(id, TFClass_Scout);
+		CreateTimer(1.0, ClassSelection, id, TIMER_FLAG_NO_MAPCHANGE);
 	}
 	
 }
-public OnClientConnected(id)
-{
-	if (id > 0 && IsClientInGame(id) && dalgasuresi > 0 && oyun && TakimdakiOyuncular(3) > 0 && !IsPlayerAlive(id) && sayim <= 0)
-	{
-		ChangeClientTeam(id, 3);
-		TF2_RespawnPlayer(id);
-		TF2_SetPlayerClass(id, TFClass_Scout);
+public Action:ClassSelection(Handle:timer, any:id) {
+	if (IsClientInGame(id)) {
+		ShowVGUIPanel(id, GetClientTeam(id) == TFTeam_Blue ? "class_blue" : "class_red");
+	} else {
+		PrintToChat(id, "Lütfen [,] e basın!");
 	}
 }
 public OnPluginStart()
@@ -140,25 +137,6 @@ public OnPluginStart()
 	AddCommandListener(hook_JoinClass, "joinclass");
 	AddCommandListener(BlockedCommands, "autoteam");
 	AddCommandListener(BlockedCommandsteam, "jointeam");
-}
-public OnGameFrame() // Cpu kullanımı arttırabilir ama dedicated sunucuda arttırmıyordu şuanlık buraya ekstra bir check eklemicem.
-{
-	new id = GetClientOfUserId(id);
-	if (id > 0 && IsClientInGame(id) && TF2_GetClientTeam(id) == TFTeam_Spectator)
-	{
-		if (TakimdakiOyuncular(3) > 0 && sayim < 0)
-		{
-			ChangeClientTeam(id, 3);
-			TF2_SetPlayerClass(id, TFClass_Scout);
-			TF2_RespawnPlayer(id);
-		}
-		if (TakimdakiOyuncular(3) == 0 && sayim > 0)
-		{
-			ChangeClientTeam(id, 2);
-			TF2_SetPlayerClass(id, TFClass_Medic);
-			TF2_RespawnPlayer(id);
-		}
-	}
 }
 public Action:Event_Resupply(Handle:hEvent, const String:name[], bool:dontBroadcast)
 {
@@ -265,13 +243,6 @@ public Action:BlockedCommandsteam(client, const String:command[], argc)
 		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun esnasında ya da setup zamanında takım değiştirilemez!");
 		return Plugin_Handled; // Engellemeyi uygula
 	}
-	/*
-	if (!oyun && sayim > 0 && sayim < 5 && TF2_GetClientTeam(client) != TFTeam_Blue && TF2_GetClientTeam(client) != TFTeam_Spectator) // Round başlamadığı zaman oyuncular zombi olmaya çalışırsa engellensin.
-	{  // 5 saniye kala kimse takım değiştiremez. oyuncular reddeyse
-		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun başlamadan zombi olamazsın!");
-		return Plugin_Handled; //Engellemeyi uygula
-	}
-	*/
 	return Plugin_Continue; // Eğer öyle bir olay yoksa da plugin çalışmaya devam edicek.
 }
 public Action:hook_JoinClass(client, const String:command[], argc)
@@ -412,7 +383,7 @@ public Action:hazirlik(Handle:timer, any:client)
 	sayim--;
 	if (sayim <= zm_tHazirliksuresi && sayim > 0)
 	{
-		//izleyicikontrolu();
+		izleyicikontrolu();
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Setup:%02d:%02d", sayim / 60, sayim % 60);
 		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "☠Zombi☠:%d", TakimdakiOyuncular(3));
 		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "Insan:%d", TakimdakiOyuncular(2));
@@ -443,7 +414,7 @@ public Action:oyun1(Handle:timer, any:id)
 	dalgasuresi--;
 	if (dalgasuresi <= zm_tDalgasuresi && dalgasuresi > 0 && oyun)
 	{
-		//izleyicikontrolu();
+		izleyicikontrolu();
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Round:%02d:%02d", dalgasuresi / 60, dalgasuresi % 60);
 		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "☠Zombiler☠:%d", TakimdakiOyuncular(3));
 		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "İnsanlar:%d", TakimdakiOyuncular(2));
@@ -467,7 +438,7 @@ stock rastgelezombi()
 	new oyuncular[MaxClients + 1], num;
 	for (new i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientInGame(i) && GetClientTeam(i) > 1)
+		if (IsClientInGame(i) && GetClientTeam(i) > 1 && TF2_GetPlayerClass(i) != TFClass_Engineer)
 		{
 			oyuncular[num++] = i;
 		}
