@@ -62,7 +62,7 @@ public Plugin:myinfo =
 	author = PLUGIN_AUTHOR, 
 	description = "", 
 	version = PLUGIN_VERSION, 
-	url = "sourcemod."
+	url = "tf2türkiye.com"
 };
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
@@ -139,21 +139,21 @@ public OnPluginStart()
 public OnGameFrame() // Cpu kullanımı arttırabilir ama dedicated sunucuda arttırmıyordu şuanlık buraya ekstra bir check eklemicem.
 {
 	new id = GetClientOfUserId(id);
-	if(id > 0  && IsClientInGame(id) && TF2_GetClientTeam(id) == TFTeam_Spectator)
+	if (id > 0 && IsClientInGame(id) && TF2_GetClientTeam(id) == TFTeam_Spectator)
 	{
-		if(oyun)
+		if (oyun)
 		{
 			ChangeClientTeam(id, 3);
 			TF2_SetPlayerClass(id, TFClass_Scout);
 			TF2_RespawnPlayer(id);
-	    }
-	    if(sayim > 0)
-	    {
-	        ChangeClientTeam(id, 2);
-	    	TF2_SetPlayerClass(id, TFClass_Medic);
-	    	TF2_RespawnPlayer(id);
-	    }
-    }
+		}
+		if (sayim > 0)
+		{
+			ChangeClientTeam(id, 2);
+			TF2_SetPlayerClass(id, TFClass_Medic);
+			TF2_RespawnPlayer(id);
+		}
+	}
 }
 public Action:Event_Resupply(Handle:hEvent, const String:name[], bool:dontBroadcast)
 {
@@ -280,7 +280,7 @@ public Action:setup(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	zombimod(); //Round timerin işlemesi için
 	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCHazırlık bitti!");
-    izleyicikontrolu();
+	izleyicikontrolu();
 }
 public Action:event_PlayerBuiltObject(Handle:event, const String:name[], bool:dontBroadcast) //Garip bir şekilde çalışmıyor.
 {
@@ -857,16 +857,16 @@ discizgi()
 			//SetVariantColor(color);
 		}
 	}
-} 
+}
 izleyicikontrolu()
 {
 	for (new i = 1; i <= MaxClients; i++)
 	{
-		if(IsClientInGame(i) && TF2_GetClientTeam(i) == TFTeam_Spectator)
+		if (IsClientInGame(i) && TF2_GetClientTeam(i) == TFTeam_Spectator)
 		{
 			ChangeClientTeam(i, 3);
 			TF2_SetPlayerClass(i, TFClass_Scout);
 			TF2_RespawnPlayer(i);
-	    }
-    }
-}
+		}
+	}
+} 
