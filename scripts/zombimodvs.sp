@@ -470,20 +470,23 @@ zombi(client)
 }
 public Action:silah(Handle:timer, any:client)
 {
-	for (new i = 0; i <= 5; i++)
+	if (client > 0 && IsClientInGame(client))
 	{
-		if (client > 0 && i != 2 && TF2_GetClientTeam(client) == TFTeam_Blue)
+		for (new i = 0; i <= 5; i++)
 		{
-			//TF2_RemoveWeaponSlot(client, i);
-			TF2_RemoveWeaponSlot(client, i);
+			if (client > 0 && i != 2 && TF2_GetClientTeam(client) == TFTeam_Blue)
+			{
+				//TF2_RemoveWeaponSlot(client, i);
+				TF2_RemoveWeaponSlot(client, i);
+			}
 		}
-	}
-	if (client > 0 && TF2_GetClientTeam(client) == TFTeam_Blue)
-	{
-		new silah1 = GetPlayerWeaponSlot(client, 2);
-		if (IsValidEdict(silah1))
+		if (client > 0 && TF2_GetClientTeam(client) == TFTeam_Blue)
 		{
-			EquipPlayerWeapon(client, silah1);
+			new silah1 = GetPlayerWeaponSlot(client, 2);
+			if (IsValidEdict(silah1))
+			{
+				EquipPlayerWeapon(client, silah1);
+			}
 		}
 	}
 }
