@@ -61,7 +61,7 @@ public Plugin:myinfo =
 	author = PLUGIN_AUTHOR, 
 	description = "", 
 	version = PLUGIN_VERSION, 
-	url = "tf2türkiye.com"
+	url = ""
 };
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
