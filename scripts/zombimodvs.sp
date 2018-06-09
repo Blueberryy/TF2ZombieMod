@@ -108,7 +108,6 @@ public OnPluginStart()
 	//Konsol Komutları
 	RegConsoleCmd("sm_msc", msc);
 	RegConsoleCmd("sm_menu", zmenu);
-	RegConsoleCmd("sm_ttadfffseaxxfs", test);
 	//Zamanlayıcılar
 	CreateTimer(1.0, hazirlik, _, TIMER_REPEAT);
 	CreateTimer(1.0, oyun1, _, TIMER_REPEAT);
@@ -145,11 +144,6 @@ public OnPluginStart()
 	AddCommandListener(hook_JoinClass, "joinclass");
 	AddCommandListener(BlockedCommands, "autoteam");
 	AddCommandListener(BlockedCommandsteam, "jointeam");
-}
-public Action:test(client, args)
-{
-	PrintToChat(client, "setupsayim:%d", sayimsetup);
-	PrintToChat(client, "sayim:%d", sayim);
 }
 public Action:Event_Resupply(Handle:hEvent, const String:name[], bool:dontBroadcast)
 {
