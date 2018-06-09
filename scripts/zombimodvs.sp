@@ -80,7 +80,7 @@ public OnMapStart()
 {  //Ayarların yüklenmesi.
 	zombimod();
 	setuptime();
-	ServerCommand("mp_restartgame 1 ");
+	//ServerCommand("mp_restartgame 1 ");
 	//Sounds
 	//PrecacheSound(sarkir_01, true);
 	//AddFileToDownloadsTable("sound/left4fortress/rabies01.mp3");
@@ -97,7 +97,7 @@ public OnClientPutInServer(id)
 	
 }
 public Action:ClassSelection(Handle:timer, any:id) {
-	if (IsClientInGame(id)) {
+	if (id > 0 && IsClientInGame(id)) {
 		ShowVGUIPanel(id, GetClientTeam(id) == TFTeam_Blue ? "class_blue" : "class_red");
 	} else {
 		PrintToChat(id, "Lütfen [,] e basın!");
@@ -135,9 +135,9 @@ public OnPluginStart()
 	ServerCommand("mp_autoteambalance 0");
 	ServerCommand("mp_teams_unbalance_limit 0");
 	ServerCommand("mp_respawnwavetime 0 ");
-	ServerCommand("mp_restartgame 1 ");
+	//ServerCommand("mp_restartgame 1 ");
 	ServerCommand("mp_disable_respawn_times 1 ");
-	ServerCommand("sm_cvar mp_waitingforplayers_time 20");
+	ServerCommand("sm_cvar mp_waitingforplayers_time 25");
 	//Tercihler
 	MusicCookie = RegClientCookie("oyuncu_mzk_ayari", "Muzik Ayarı", CookieAccess_Public);
 	//Komut takibi
@@ -245,7 +245,7 @@ public Action:BlockedCommands(client, const String:command[], argc)
 }
 public Action:BlockedCommandsteam(client, const String:command[], argc)
 {
-	if (dalgasuresi > 0 && oyun && TF2_GetClientTeam(client) == TFTeam_Blue) //Round başladığı halde oyuncular takım değiştirmeye çalışırsa engellensin
+	if (dalgasuresi > 0 && oyun && GetClientTeam(client) > 1) //Round başladığı halde oyuncular takım değiştirmeye çalışırsa engellensin
 	{
 		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun esnasında ya da setup zamanında takım değiştirilemez!");
 		return Plugin_Handled; // Engellemeyi uygula
@@ -390,7 +390,7 @@ public Action:hazirlik(Handle:timer, any:client)
 	sayim--;
 	if (sayim <= zm_tHazirliksuresi && sayim > 0)
 	{
-		izleyicikontrolu();
+		//izleyicikontrolu();
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Setup:%02d:%02d", sayim / 60, sayim % 60);
 		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "☠Zombi☠:%d", TakimdakiOyuncular(3));
 		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "Insan:%d", TakimdakiOyuncular(2));
