@@ -1,4 +1,4 @@
-ZF,ZS,ZM,SZF
+ZF,ZS,ZM,SZF,ZOM Map desteği 
 
 
 CONVARLAR
