@@ -137,7 +137,7 @@ public OnPluginStart()
 	ServerCommand("mp_respawnwavetime 0 ");
 	ServerCommand("mp_restartgame 1 ");
 	ServerCommand("mp_disable_respawn_times 1 ");
-	ServerCommand("sm_cvar mp_waitingforplayers_time 0");
+	ServerCommand("sm_cvar mp_waitingforplayers_time 20");
 	//Tercihler
 	MusicCookie = RegClientCookie("oyuncu_mzk_ayari", "Muzik Ayarı", CookieAccess_Public);
 	//Komut takibi
@@ -245,7 +245,7 @@ public Action:BlockedCommands(client, const String:command[], argc)
 }
 public Action:BlockedCommandsteam(client, const String:command[], argc)
 {
-	if (dalgasuresi > 0 && oyun) //Round başladığı halde oyuncular takım değiştirmeye çalışırsa engellensin
+	if (dalgasuresi > 0 && oyun && TF2_GetClientTeam(client) == TFTeam_Blue) //Round başladığı halde oyuncular takım değiştirmeye çalışırsa engellensin
 	{
 		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun esnasında ya da setup zamanında takım değiştirilemez!");
 		return Plugin_Handled; // Engellemeyi uygula
