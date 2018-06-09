@@ -17,8 +17,8 @@ Spy - 300
 #define DEBUG
 
 #define PLUGIN_AUTHOR "steamId=crackersarenoice"
-#define PLUGIN_VERSION "1.02"
-#define sarkir01 "left4fortress/rabies01.mp3"
+#define PLUGIN_VERSION "1.03"
+#define sarkir_01 "left4fortress/rabies01.mp3"
 #define PLAYERBUILTOBJECT_ID_DISPENSER 0
 #define PLAYERBUILTOBJECT_ID_TELENT    1
 #define PLAYERBUILTOBJECT_ID_TELEXIT   2
@@ -41,19 +41,23 @@ Spy - 300
 #include <tf2_stocks>
 #include <sdkhooks>
 #include <clientprefs>
-
+//Handles
 new Handle:zm_tDalgasuresi = INVALID_HANDLE;
 new Handle:zm_tHazirliksuresi = INVALID_HANDLE;
 new Handle:zm_hTekvurus = INVALID_HANDLE;
 new Handle:MusicCookie;
+//bools
+new bool:bTimer = false;
 new bool:oyun;
+new bool:timer1 = false;
+//ints
 new sayim;
 new dalgasuresi;
 new bool:kazanan;
 //new bool:oyuncumuzik;
 new sayimsetup;
-new bool:timer1 = false;
 new flspeed;
+
 
 public Plugin:myinfo = 
 {
@@ -77,6 +81,9 @@ public OnMapStart()
 	zombimod();
 	setuptime();
 	ServerCommand("mp_restartgame 1 ");
+	//Sounds
+	//PrecacheSound(sarkir_01, true);
+	//AddFileToDownloadsTable("sound/left4fortress/rabies01.mp3");
 }
 public OnClientPutInServer(id)
 {
@@ -101,6 +108,7 @@ public OnPluginStart()
 	//Konsol Komutları
 	RegConsoleCmd("sm_msc", msc);
 	RegConsoleCmd("sm_menu", zmenu);
+	RegConsoleCmd("sm_ttadfffseaxxfs", test);
 	//Zamanlayıcılar
 	CreateTimer(1.0, hazirlik, _, TIMER_REPEAT);
 	CreateTimer(1.0, oyun1, _, TIMER_REPEAT);
@@ -137,6 +145,11 @@ public OnPluginStart()
 	AddCommandListener(hook_JoinClass, "joinclass");
 	AddCommandListener(BlockedCommands, "autoteam");
 	AddCommandListener(BlockedCommandsteam, "jointeam");
+}
+public Action:test(client, args)
+{
+	PrintToChat(client, "setupsayim:%d", sayimsetup);
+	PrintToChat(client, "sayim:%d", sayim);
 }
 public Action:Event_Resupply(Handle:hEvent, const String:name[], bool:dontBroadcast)
 {
@@ -392,7 +405,7 @@ public Action:hazirlik(Handle:timer, any:client)
 	} else {
 		oyun = true;
 		new num = TakimdakiOyuncular(2);
-		if (TakimdakiOyuncular(3) == 0 && num > 1)
+		if (TakimdakiOyuncular(3) == 0 && num > 0)
 		{
 			new num2; //belirtilen deger
 			switch (num)
@@ -485,7 +498,7 @@ TakimdakiOyuncular(iTakim)
 	new iSayi;
 	for (new i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientInGame(i) && GetClientTeam(i) == iTakim)
+		if (IsClientConnected(i) && IsClientInGame(i) && GetClientTeam(i) == iTakim)
 		{
 			iSayi++;
 		}
@@ -573,7 +586,9 @@ setuptime()
 	}
 	if (sayim > 0)
 	{
+		bTimer = true;
 		CreateTimer(1.0, Timer_SetTimeSetup, ent1, TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(1.0, Timer_Song, _, TIMER_FLAG_NO_MAPCHANGE);
 	}
 }
 public Action:Timer_SetTimeSetup(Handle:timer, any:ent1)
@@ -581,6 +596,18 @@ public Action:Timer_SetTimeSetup(Handle:timer, any:ent1)
 	SetVariantInt(GetConVarInt(zm_tHazirliksuresi));
 	sayimsetup = sayim;
 	AcceptEntityInput(ent1, "SetTime");
+}
+public Action:Timer_Song(Handle:timer, any:client)
+{
+	if (bTimer)
+	{
+		if (OyuncuMuzikAyari(client, true))
+		{
+			//EmitSoundToClient(client, sarkir_01, _, _, SNDLEVEL_NONE);
+			//muzikclients();
+			//Diger sarkilar
+		}
+	}
 }
 public Action:Timer_SetTimeSetupSayim(Handle:timer, any:id)
 {
@@ -688,22 +715,18 @@ MuzikAc(client)
 
 OyuncuMuzikAyari(client, bool:acik)
 {
-	if (!IsClientInGame(client))
-	{
-		return;
-	}
-	if (IsFakeClient(client))
-	{
-		return;
-	}
 	new String:strCookie[32];
-	if (acik)
+	if (client > 0 && IsClientInGame(client) && !IsFakeClient(client))
 	{
-		strCookie = "1";
-	} else {
-		strCookie = "0";
-		SetClientCookie(client, MusicCookie, strCookie);
+		if (acik)
+		{
+			strCookie = "1";
+		} else {
+			strCookie = "0";
+			SetClientCookie(client, MusicCookie, strCookie);
+		}
 	}
+	return bool:StringToInt(strCookie);
 }
 stock bool:IsValidClient(client, bool:nobots = true)
 {
@@ -862,4 +885,17 @@ izleyicikontrolu()
 			TF2_RespawnPlayer(i);
 		}
 	}
-} 
+}
+/*
+muzikclients()
+{
+	for (new i = 1; i <= MaxClients; i++)
+	{
+		if(IsClientInGame(i) && !IsFakeClient(i) && OyuncuMuzikAyari(i, true))
+		{
+			EmitSoundToAll(sarkir_01);
+	        }
+        }
+}
+*/
+
