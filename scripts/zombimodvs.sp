@@ -130,8 +130,8 @@ public OnPluginStart()
 	HookEvent("player_hurt", HookPlayerHurt);
 	HookEvent("post_inventory_application", Event_Resupply);
 	//Esas ayarlar
-	//ServerCommand("sm_cvar tf_obj_upgrade_per_hit 0");
-	//ServerCommand("sm_cvar tf_sentrygun_metal_per_shell 201");
+	ServerCommand("sm_cvar tf_obj_upgrade_per_hit 0");
+	ServerCommand("sm_cvar tf_sentrygun_metal_per_shell 201");
 	ServerCommand("mp_autoteambalance 0");
 	ServerCommand("mp_teams_unbalance_limit 0");
 	ServerCommand("mp_respawnwavetime 0 ");
