@@ -57,6 +57,7 @@ new bool:kazanan;
 //new bool:oyuncumuzik;
 new sayimsetup;
 new flspeed;
+new oldilevel[MAXPLAYERS];
 
 
 public Plugin:myinfo = 
@@ -124,14 +125,15 @@ public OnPluginStart()
 	HookEvent("teamplay_round_start", round);
 	HookEvent("player_death", death);
 	HookEvent("player_spawn", spawn);
-	HookEvent("player_builtobject", event_PlayerBuiltObject);
+	//HookEvent("player_builtobject", event_PlayerBuiltObject);
 	HookEvent("teamplay_setup_finished", setup);
 	HookEvent("teamplay_point_captured", captured, EventHookMode_Post);
 	HookEvent("player_hurt", HookPlayerHurt);
 	HookEvent("post_inventory_application", Event_Resupply);
+	HookEntityOutput("obj_sentrygun", "OnObjectHealthChanged", objectHealthChanged);
 	//Esas ayarlar
-	ServerCommand("sm_cvar tf_obj_upgrade_per_hit 0");
-	ServerCommand("sm_cvar tf_sentrygun_metal_per_shell 201");
+	//ServerCommand("sm_cvar tf_obj_upgrade_per_hit 0");
+	//ServerCommand("sm_cvar tf_sentrygun_metal_per_shell 201");
 	ServerCommand("mp_autoteambalance 0");
 	ServerCommand("mp_teams_unbalance_limit 0");
 	ServerCommand("mp_respawnwavetime 0 ");
@@ -144,6 +146,26 @@ public OnPluginStart()
 	AddCommandListener(hook_JoinClass, "joinclass");
 	AddCommandListener(BlockedCommands, "autoteam");
 	AddCommandListener(BlockedCommandsteam, "jointeam");
+}
+public OnGameFrame() {
+	new entity = -1;
+	while ((entity = FindEntityByClassname(entity, "obj_sentrygun")) != -1) {
+		SetEntProp(entity, Prop_Send, "m_iUpgradeMetal", 0);
+	}
+}
+public objectHealthChanged(const String:output[], caller, activator, Float:delay)
+{
+	/*
+	if(caller != GetEntProp(caller, Prop_Send, "m_iUpgradeLevel"))
+	{
+		//SetEntProp(caller, Prop_Send, "m_iHighestUpgradeLevel", 1);
+		new  svy = GetEntProp(caller, Prop_Send, "m_iUpgradeLevel");
+		if(svy >  1)
+		{
+			SetEntProp(caller, Prop_Send, "m_iUpgradeLevel", 1);
+	        }
+        }
+        */
 }
 public Action:Event_Resupply(Handle:hEvent, const String:name[], bool:dontBroadcast)
 {
@@ -267,20 +289,26 @@ public Action:setup(Handle:event, const String:name[], bool:dontBroadcast)
 	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCHazırlık bitti!");
 	izleyicikontrolu();
 }
-public Action:event_PlayerBuiltObject(Handle:event, const String:name[], bool:dontBroadcast) //Garip bir şekilde çalışmıyor.
+public Action:OnPlayerBuildObject(Handle:event, const String:name[], bool:dontBroadcast) //Garip bir şekilde çalışmıyor.
 {
-	new index1 = GetEventInt(event, "index");
-	new object1 = GetEventInt(event, "object");
-	if (object1 == PLAYERBUILTOBJECT_ID_DISPENSER)
+	new entity = GetEventInt(event, "index");
+	CreateTimer(0.1, tBuiltKontrol, EntIndexToEntRef(entity), TIMER_FLAG_NO_MAPCHANGE);
+	return Plugin_Continue;
+}
+public Action:tBuiltKontrol(Handle:timer, any:ref)
+{
+	new entity = EntRefToEntIndex(ref);
+	new seviye = GetEntProp(entity, Prop_Send, "m_iUpgradeLevel");
+	if (entity < MaxClients || !IsValidEntity(entity))return Plugin_Continue;
+	switch (TF2_GetObjectType(entity))
 	{
-		SetEntProp(index1, Prop_Send, "m_bDisabled", 1);
-		SetEntProp(index1, Prop_Send, "m_iMaxHealth", 250);
+		case TFObject_Sentry:
+		{
+			//SetEntProp(entity, Prop_Send, "m_iHighestUpgradeLevel", 1);
+			//SetEntProp(entity, Prop_Send, "m_iUpgradeLevel", 1);
+		}
 	}
-	else if (object1 == PLAYERBUILTOBJECT_ID_SENTRY)
-	{
-		SetEntProp(index1, Prop_Send, "m_bDisabled", 1);
-		SetEntProp(index1, Prop_Send, "m_iMaxHealth", 75);
-	}
+	return Plugin_Continue;
 }
 //----------------------MENU HANDLE------------------------------------------
 public Action:msc(client, args)
@@ -897,3 +925,12 @@ muzikclients()
         }
 }
 */
+public Action:TF2_CalcIsAttackCritical(id, weapon, String:weaponname[], &bool:result)
+{
+	if (StrEqual(weaponname, "tf_weapon_compound_bow", false))
+	{
+		result = true;
+		return Plugin_Changed;
+	}
+	return Plugin_Continue;
+} 
