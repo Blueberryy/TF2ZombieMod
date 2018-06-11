@@ -302,7 +302,6 @@ public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 	kazanan = false;
 	zombimod();
 	setuptime();
-	kontrolv2();
 }
 public Action:Regenerate(Handle:timer, any:client)
 {
@@ -437,6 +436,11 @@ public Action:oyun1(Handle:timer, any:id)
 		if (TakimdakiOyuncular(2) > 0)
 		{
 			kazanantakim(2);
+			oyunuresetle();
+		}
+		else if (TakimdakiOyuncular(2) == 0)
+		{
+			kazanantakim(3);
 			oyunuresetle();
 		}
 	}
@@ -893,11 +897,3 @@ muzikclients()
         }
 }
 */
-kontrolv2()
-{
-	if(TakimdakiOyuncular(2) == 0 && dalgasuresi < 1)
-	{
-		kazanantakim(3);
-		oyunuresetle();
-        }
-}
