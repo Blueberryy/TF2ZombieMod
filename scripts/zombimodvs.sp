@@ -54,6 +54,7 @@ new bool:timer1 = false;
 new sayim;
 new dalgasuresi;
 new bool:kazanan;
+new dalgasayisi;
 //new bool:oyuncumuzik;
 new sayimsetup;
 new flspeed;
@@ -89,13 +90,11 @@ public OnMapStart()
 public OnClientPutInServer(id)
 {
 	SDKHook(id, SDKHook_OnTakeDamage, OnTakeDamage);
-	
 	if (id > 0 && IsClientInGame(id) && oyun && TakimdakiOyuncular(3) > 0 && sayim <= 0)
 	{
 		ChangeClientTeam(id, 3);
 		CreateTimer(1.0, ClassSelection, id, TIMER_FLAG_NO_MAPCHANGE);
 	}
-	
 }
 public Action:ClassSelection(Handle:timer, any:id) {
 	if (id > 0 && IsClientInGame(id)) {
@@ -118,9 +117,9 @@ public OnPluginStart()
 	CreateTimer(190.0, yazi3, _, TIMER_REPEAT);
 	CreateTimer(1.0, Timer_SetTimeSetupSayim, _, TIMER_REPEAT);
 	//Convarlar
-	zm_tHazirliksuresi = CreateConVar("zm_setup", "30", "Setup suresi/Hazirlik Suresi", FCVAR_NOTIFY | FCVAR_PLUGIN);
-	zm_tDalgasuresi = CreateConVar("zm_dalgasuresi", "380", "Setup bittikten sonraki round zamani", FCVAR_NOTIFY | FCVAR_PLUGIN);
-	zm_hTekvurus = CreateConVar("zm_tekvurus", "1", "Zombiler tek vurusta insanlari infekte edebilsin (1/0) 0 kapatir.", FCVAR_NOTIFY | FCVAR_PLUGIN);
+	zm_tHazirliksuresi = CreateConVar("zm_setup", "60", "Setup suresi/Hazirlik Suresi", FCVAR_NOTIFY | FCVAR_PLUGIN);
+	zm_tDalgasuresi = CreateConVar("zm_dalgasuresi", "200", "Setup bittikten sonraki round zamani", FCVAR_NOTIFY | FCVAR_PLUGIN);
+	zm_hTekvurus = CreateConVar("zm_tekvurus", "0", "Zombiler tek vurusta insanlari infekte edebilsin (1/0) 0 kapatir.", FCVAR_NOTIFY | FCVAR_PLUGIN);
 	//Olaylar
 	HookEvent("teamplay_round_start", round);
 	HookEvent("player_death", death);
@@ -140,6 +139,9 @@ public OnPluginStart()
 	//ServerCommand("mp_restartgame 1 ");
 	ServerCommand("mp_disable_respawn_times 1 ");
 	ServerCommand("sm_cvar mp_waitingforplayers_time 25");
+	ServerCommand("sm_cvar tf_spy_invis_time 0.5"); // Locked 
+	ServerCommand("sm_cvar tf_spy_invis_unstealth_time 0.75"); // Locked 
+	ServerCommand("sm_cvar tf_spy_cloak_no_attack_time 1.0");
 	//Tercihler
 	MusicCookie = RegClientCookie("oyuncu_mzk_ayari", "Muzik Ayarı", CookieAccess_Public);
 	//Komut takibi
@@ -170,13 +172,12 @@ public objectHealthChanged(const String:output[], caller, activator, Float:delay
 public Action:Event_Resupply(Handle:hEvent, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(hEvent, "userid"));
-	if (client && IsClientInGame(client) && IsPlayerAlive(client) && GetClientTeam(client) == TFTeam_Blue)
+	if (client && IsClientInGame(client) && IsPlayerAlive(client) && TF2_GetClientTeam(client) == TFTeam_Blue)
 	{
 		zombi(client); //Oyuncular resupply cabinete dokunduğu zaman silahlarını tekrar silmek için. (Zombilerin)
 	}
 	return Plugin_Continue;
 }
-
 public HookPlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new iUserId = GetEventInt(event, "userid");
@@ -382,6 +383,22 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 			case TFClass_Spy:
 			{
 				TF2_RemoveWeaponSlot(client, 3);
+				//TF2_RemoveWeaponSlot(client, 4);
+				//EquipPlayerWeapon(client, GivePlayerItem(client, "tf_weapon_invis"));
+				new slot = GetPlayerWeaponSlot(client, 4);
+				if (IsValidEntity(slot))
+				{
+					decl String:classname[64];
+					if (GetEntityClassname(slot, classname, sizeof(classname)) && StrContains(classname, "tf_weapon", false) != -1)
+						//case 46, 163, 222, 32: {}
+					{
+						switch (GetEntProp(slot, Prop_Send, "m_iItemDefinitionIndex"))
+						{
+							case 30: {  }
+							default:TF2_RemoveWeaponSlot(client, 4);
+						}
+					}
+				}
 			}
 			case TFClass_Engineer:
 			{
@@ -435,7 +452,7 @@ public Action:hazirlik(Handle:timer, any:client)
 				//num = num2 - num
 				case 0, 1, 2, 3, 4, 5, 6, 7, 8, 9:num2 = 1; // case 0-5
 				case 10, 11, 12, 13, 14, 15, 16, 17, 18, 19:num2 = 2; // case 5-10
-				case 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32:num2 = 4; // case 10-15
+				case 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32:num2 = 3; // case 10-15
 			}
 			for (new i = 0; i <= num2; i++)
 			{
@@ -506,7 +523,6 @@ public Action:silah(Handle:timer, any:client)
 		{
 			if (client > 0 && i != 2 && TF2_GetClientTeam(client) == TFTeam_Blue)
 			{
-				//TF2_RemoveWeaponSlot(client, i);
 				TF2_RemoveWeaponSlot(client, i);
 			}
 		}
