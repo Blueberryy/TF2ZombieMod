@@ -50,6 +50,7 @@ new Handle:MusicCookie;
 new bool:bTimer = false;
 new bool:oyun;
 new bool:timer1 = false;
+new bool:end1 = false;
 //ints
 new sayim;
 new dalgasuresi;
@@ -443,7 +444,23 @@ public Action:hazirlik(Handle:timer, any:client)
 		oyun = false;
 	} else {
 		oyun = true;
-		new num = TakimdakiOyuncular(2);
+		if (TakimdakiOyuncular(3) == 0 && TakimdakiOyuncular(2) > 9)
+		{
+			zombi(rastgelezombi());
+			zombi(rastgelezombi());
+			if (TakimdakiOyuncular(2) > 20)
+			{
+				zombi(rastgelezombi());
+				zombi(rastgelezombi());
+				zombi(rastgelezombi());
+			}
+		}
+		else if (TakimdakiOyuncular(3) == 0 && TakimdakiOyuncular(2) < 9)
+		{
+			zombi(rastgelezombi());
+		}
+		//new num = TakimdakiOyuncular(2);
+		/*
 		if (TakimdakiOyuncular(3) == 0 && num > 0)
 		{
 			new num2; //belirtilen deger
@@ -459,6 +476,7 @@ public Action:hazirlik(Handle:timer, any:client)
 				zombi(rastgelezombi());
 			}
 		}
+		*/
 	}
 }
 public Action:oyun1(Handle:timer, any:id)
@@ -495,7 +513,7 @@ stock rastgelezombi()
 	new oyuncular[MaxClients + 1], num;
 	for (new i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientInGame(i) && GetClientTeam(i) > 1 && TF2_GetPlayerClass(i) != TFClass_Engineer)
+		if (IsClientInGame(i) && GetClientTeam(i) > 1 && TF2_GetPlayerClass(i) != TFClass_Engineer && oyun)
 		{
 			oyuncular[num++] = i;
 		}
@@ -949,4 +967,15 @@ public Action:TF2_CalcIsAttackCritical(id, weapon, String:weaponname[], &bool:re
 		return Plugin_Changed;
 	}
 	return Plugin_Continue;
+}
+public OnMapVoteStarted()
+{
+	end1 = true;
+}
+public OnMapEnd()
+{
+	if (end1)
+	{
+		oyun = false;
+	}
 } 
