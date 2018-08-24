@@ -50,16 +50,14 @@ new Handle:MusicCookie;
 new bool:bTimer = false;
 new bool:oyun;
 new bool:timer1 = false;
-new bool:end1 = false;
+new bool:getrand = false;
 //ints
 new sayim;
 new dalgasuresi;
 new bool:kazanan;
-new dalgasayisi;
 //new bool:oyuncumuzik;
 new sayimsetup;
 new flspeed;
-new oldilevel[MAXPLAYERS];
 
 
 public Plugin:myinfo = 
@@ -130,7 +128,6 @@ public OnPluginStart()
 	HookEvent("teamplay_point_captured", captured, EventHookMode_Post);
 	HookEvent("player_hurt", HookPlayerHurt);
 	HookEvent("post_inventory_application", Event_Resupply);
-	HookEntityOutput("obj_sentrygun", "OnObjectHealthChanged", objectHealthChanged);
 	//Esas ayarlar
 	//ServerCommand("sm_cvar tf_obj_upgrade_per_hit 0");
 	//ServerCommand("sm_cvar tf_sentrygun_metal_per_shell 201");
@@ -155,20 +152,6 @@ public OnGameFrame() {
 	while ((entity = FindEntityByClassname(entity, "obj_sentrygun")) != -1) {
 		SetEntProp(entity, Prop_Send, "m_iUpgradeMetal", 0);
 	}
-}
-public objectHealthChanged(const String:output[], caller, activator, Float:delay)
-{
-	/*
-	if(caller != GetEntProp(caller, Prop_Send, "m_iUpgradeLevel"))
-	{
-		//SetEntProp(caller, Prop_Send, "m_iHighestUpgradeLevel", 1);
-		new  svy = GetEntProp(caller, Prop_Send, "m_iUpgradeLevel");
-		if(svy >  1)
-		{
-			SetEntProp(caller, Prop_Send, "m_iUpgradeLevel", 1);
-	        }
-        }
-        */
 }
 public Action:Event_Resupply(Handle:hEvent, const String:name[], bool:dontBroadcast)
 {
@@ -210,7 +193,10 @@ public HookPlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 }
 public Action:captured(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	kazanantakim(2);
+	new entity = GetClientOfUserId(GetEventInt(event, "userid"));
+	kazanan = true;
+	new capT = GetEntProp(entity, Prop_Send, "m_iOwner");
+	kazanantakim(capT);
 	oyunuresetle(); //Control point capture edildiği zaman resetlenme gerçekleşicek
 }
 public Action:zmenu(client, args)
@@ -300,7 +286,6 @@ public Action:OnPlayerBuildObject(Handle:event, const String:name[], bool:dontBr
 public Action:tBuiltKontrol(Handle:timer, any:ref)
 {
 	new entity = EntRefToEntIndex(ref);
-	new seviye = GetEntProp(entity, Prop_Send, "m_iUpgradeLevel");
 	if (entity < MaxClients || !IsValidEntity(entity))return Plugin_Continue;
 	switch (TF2_GetObjectType(entity))
 	{
@@ -330,6 +315,7 @@ public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 	sayim = GetConVarInt(zm_tHazirliksuresi); //Setup zamanlayicisinin convarın değerini alması için
 	dalgasuresi = GetConVarInt(zm_tDalgasuresi); //Round zamanlayicisinin convarın değerini alması için
 	kazanan = false;
+	getrand = false;
 	zombimod();
 	setuptime();
 }
@@ -444,7 +430,7 @@ public Action:hazirlik(Handle:timer, any:client)
 		oyun = false;
 	} else {
 		oyun = true;
-		if (TakimdakiOyuncular(3) == 0 && TakimdakiOyuncular(2) > 9)
+		if (TakimdakiOyuncular(3) == 0 && TakimdakiOyuncular(2) > 9 && oyun && !getrand)
 		{
 			zombi(rastgelezombi());
 			zombi(rastgelezombi());
@@ -455,7 +441,7 @@ public Action:hazirlik(Handle:timer, any:client)
 				zombi(rastgelezombi());
 			}
 		}
-		else if (TakimdakiOyuncular(3) == 0 && TakimdakiOyuncular(2) < 9)
+		else if (TakimdakiOyuncular(3) == 0 && TakimdakiOyuncular(2) < 9 && !getrand)
 		{
 			zombi(rastgelezombi());
 		}
@@ -919,11 +905,6 @@ sinifsayisi(siniff)
 }
 discizgi()
 {
-	//new color[4];
-	//color[0] = 255;
-	//color[1] = 255;
-	//color[2] = 255;
-	//color[3] = 255;
 	new oyuncu[MaxClients + 1], num;
 	for (new i = 1; i <= MaxClients; i++)
 	{
@@ -931,7 +912,6 @@ discizgi()
 		{
 			oyuncu[num++] = i;
 			SetEntProp(i, Prop_Send, "m_bGlowEnabled", 1);
-			//SetVariantColor(color);
 		}
 	}
 }
@@ -947,18 +927,6 @@ izleyicikontrolu()
 		}
 	}
 }
-/*
-muzikclients()
-{
-	for (new i = 1; i <= MaxClients; i++)
-	{
-		if(IsClientInGame(i) && !IsFakeClient(i) && OyuncuMuzikAyari(i, true))
-		{
-			EmitSoundToAll(sarkir_01);
-	        }
-        }
-}
-*/
 public Action:TF2_CalcIsAttackCritical(id, weapon, String:weaponname[], &bool:result)
 {
 	if (StrEqual(weaponname, "tf_weapon_compound_bow", false))
@@ -968,14 +936,9 @@ public Action:TF2_CalcIsAttackCritical(id, weapon, String:weaponname[], &bool:re
 	}
 	return Plugin_Continue;
 }
-public OnMapVoteStarted()
-{
-	end1 = true;
-}
 public OnMapEnd()
 {
-	if (end1)
-	{
-		oyun = false;
-	}
+	getrand = false;
 } 
+//Escape Haritalarında round süresine ekstra süre eklenenice!
+//OnMapTimeLeftChanged()
