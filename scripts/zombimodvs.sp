@@ -284,22 +284,6 @@ public Action:OnPlayerBuildObject(Handle:event, const String:name[], bool:dontBr
 	//CreateTimer(0.1, tBuiltKontrol, EntIndexToEntRef(entity), TIMER_FLAG_NO_MAPCHANGE);
 	return Plugin_Continue;
 }
-/*
-public Action:tBuiltKontrol(Handle:timer, any:ref)
-{
-	new entity = EntRefToEntIndex(ref);
-	if (entity < MaxClients || !IsValidEntity(entity))return Plugin_Continue;
-	switch (TF2_GetObjectType(entity))
-	{
-		case TFObject_Sentry:
-		{
-			//SetEntProp(entity, Prop_Send, "m_iHighestUpgradeLevel", 1);
-			//SetEntProp(entity, Prop_Send, "m_iUpgradeLevel", 1);
-		}
-	}
-	return Plugin_Continue;
-}
-*/
 //----------------------MENU HANDLE------------------------------------------
 public Action:msc(client, args)
 {
@@ -322,25 +306,6 @@ public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 	zombimod();
 	setuptime();
 }
-/*
-public Action:Regenerate(Handle:timer, any:client)
-{
-	if (client > 0 && IsClientInGame(client))
-	{
-		new ClientHealth = GetClientHealth(client); //Şuanki hp
-		new maxhp = GetEntProp(GetPlayerResourceEntity(), Prop_Send, "m_iMaxHealth", _, client); //Max hp
-		if (ClientHealth < maxhp && GetClientTeam(client) == 3 && TF2_GetPlayerClass(client) != TFClass_Medic) //Oyuncunun o an sahip olduğu hp maxhp den büyük değilse regen verilebilir.
-		{
-			SetEntProp(client, Prop_Data, "m_iHealth", ClientHealth + 15); // +5hp
-		}
-		if (ClientHealth >= maxhp)
-		{
-			//SetEntityHealth(client, maxhp);
-			KillTimer(timer);
-		}
-	}
-}
-*/
 public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
@@ -404,8 +369,6 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 public Action:death(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new victim = GetClientOfUserId(GetEventInt(event, "userid"));
-	//CreateTimer(0.3, dogus, victim, TIMER_FLAG_NO_MAPCHANGE);
-	//new deathFlags = GetUserFlagBits(victim);
 	if (GetEventInt(event, "death_flags") & 32) // Sahte ölüm
 	{
 		return;
