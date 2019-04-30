@@ -1,16 +1,3 @@
-/*
-Class Base Speed Reference:
-Scout - 400
-Soldier - 240
-Pyro - 300
-Demoman - 280
-Heavy - 230
-Engineer - 300
-Medic - 320
-Sniper - 300
-Spy - 300
-*/
-
 
 #pragma semicolon 1
 #pragma tabsize 0
@@ -121,14 +108,10 @@ public OnPluginStart()
 	HookEvent("teamplay_round_start", round);
 	HookEvent("player_death", death);
 	HookEvent("player_spawn", spawn);
-	//HookEvent("player_builtobject", event_PlayerBuiltObject);
 	HookEvent("teamplay_setup_finished", setup);
 	HookEvent("teamplay_point_captured", captured, EventHookMode_Post);
 	HookEvent("player_hurt", HookPlayerHurt);
 	HookEvent("post_inventory_application", Event_Resupply);
-	//Esas ayarlar
-	//ServerCommand("sm_cvar tf_obj_upgrade_per_hit 0");
-	//ServerCommand("sm_cvar tf_sentrygun_metal_per_shell 201");
 	ServerCommand("mp_autoteambalance 0");
 	ServerCommand("mp_teams_unbalance_limit 0");
 	ServerCommand("mp_respawnwavetime 0 ");
@@ -145,12 +128,6 @@ public OnPluginStart()
 	AddCommandListener(BlockedCommands, "autoteam");
 	AddCommandListener(BlockedCommandsteam, "jointeam");
 }
-public OnGameFrame() {
-	new entity = -1;
-	while ((entity = FindEntityByClassname(entity, "obj_sentrygun")) != -1) {
-		SetEntProp(entity, Prop_Send, "m_iUpgradeMetal", 0);
-	}
-}
 public Action:Event_Resupply(Handle:hEvent, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(hEvent, "userid"));
@@ -165,13 +142,6 @@ public HookPlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 	new iUserId = GetEventInt(event, "userid");
 	new client = GetClientOfUserId(iUserId);
 	new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
-	if (client > 0 && IsClientInGame(client) && oyun && sayim <= 0)
-	{
-		if (GetClientTeam(client) == 3)
-		{
-			//CreateTimer(3.0, Regenerate, client, TIMER_FLAG_NO_MAPCHANGE); //Health regen zamanlayıcısı (5 saniyede +hp)
-		}
-	}
 	new damagebits = GetEventInt(event, "damagebits");
 	if (client > 0 && damagebits & DMG_FALL)
 	{
@@ -262,26 +232,13 @@ public Action:BlockedCommandsteam(client, const String:command[], argc)
 	return Plugin_Continue; // Eğer öyle bir olay yoksa da plugin çalışmaya devam edicek.
 }
 
-/*
-public Action:hook_JoinClass(client, const String:command[], argc)
-{
-	if (client > 0 && sayim <= 0 && oyun && TF2_GetClientTeam(client) == TFTeam_Red)
-	{
-		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun esnasında sınıf değiştiremezsin!");
-		return Plugin_Handled;
-	}
-	return Plugin_Continue;
-}
-*/
 public Action:setup(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	zombimod(); //Round timerin işlemesi için
 	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCHazırlık bitti!");
-	//izleyicikontrolu();
 }
 public Action:OnPlayerBuildObject(Handle:event, const String:name[], bool:dontBroadcast) //Garip bir şekilde çalışmıyor.
 {
-	//CreateTimer(0.1, tBuiltKontrol, EntIndexToEntRef(entity), TIMER_FLAG_NO_MAPCHANGE);
 	return Plugin_Continue;
 }
 //----------------------MENU HANDLE------------------------------------------
@@ -323,10 +280,13 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 		{
 			SetEntityRenderColor(client, 0, 255, 0, 0);
 			zombi(client);
+			SetEntityHealth(client, 490);
 			switch (TF2_GetPlayerClass(client))
 			{
-				case TFClass_Scout:
+				case TFClass_Heavy:
 				{
+					SetEntityHealth(client, 600);
+					PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCBulk Bonusu!");
 				}
 			}
 		}
@@ -354,14 +314,12 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 			}
 			case TFClass_Engineer:
 			{
-				if (sinifsayisi(TFClass_Engineer) > 2)
+				if(sinifsayisi(TFClass_Engineer) > 2)
 				{
-					SetEntProp(client, Prop_Send, "m_lifeState", 2);
 					TF2_SetPlayerClass(client, TFClass_Scout);
-					SetEntProp(client, Prop_Send, "m_lifeState", 0);
 					TF2_RespawnPlayer(client);
-					PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCEngineer limiti aşıldı (2)!");
-				}
+					PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCEngineer limiti aşıldı, (ŞuAnkiEngiler)Limit:%d!", sinifsayisi(TFClass_Engineer));
+			        }
 			}
 		}
 	}
@@ -749,8 +707,6 @@ ClientWeapon(client)
 {
 	return GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
 }
-
-//Menü Ayarları
 Yardim(client)
 {
 	Menu hYardim = new Menu(yrd);
