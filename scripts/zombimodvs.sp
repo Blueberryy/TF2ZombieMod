@@ -55,9 +55,7 @@ new bool:getrand = false;
 new sayim;
 new dalgasuresi;
 new bool:kazanan;
-//new bool:oyuncumuzik;
 new sayimsetup;
-new flspeed;
 
 
 public Plugin:myinfo = 
@@ -81,7 +79,6 @@ public OnMapStart()
 {  //Ayarların yüklenmesi.
 	zombimod();
 	setuptime();
-	//ServerCommand("mp_restartgame 1 ");
 	//Sounds
 	PrecacheSound(sarkir_01, true);
 	AddFileToDownloadsTable("sound/left4fortress/rabies01.mp3");
@@ -117,9 +114,9 @@ public OnPluginStart()
 	CreateTimer(1.0, Timer_SetTimeSetupSayim, _, TIMER_REPEAT);
 	CreateTimer(60.0, TimerSnd1, _, TIMER_REPEAT);
 	//Convarlar
-	zm_tHazirliksuresi = CreateConVar("zm_setup", "60", "Setup suresi/Hazirlik Suresi", FCVAR_NOTIFY | FCVAR_PLUGIN);
-	zm_tDalgasuresi = CreateConVar("zm_dalgasuresi", "200", "Setup bittikten sonraki round zamani", FCVAR_NOTIFY | FCVAR_PLUGIN);
-	zm_hTekvurus = CreateConVar("zm_tekvurus", "0", "Zombiler tek vurusta insanlari infekte edebilsin (1/0) 0 kapatir.", FCVAR_NOTIFY | FCVAR_PLUGIN);
+	zm_tHazirliksuresi = CreateConVar("zm_setup", "60", "Setup suresi/Hazirlik Suresi", FCVAR_NOTIFY);
+	zm_tDalgasuresi = CreateConVar("zm_dalgasuresi", "225", "Setup bittikten sonraki round zamani", FCVAR_NOTIFY);
+	zm_hTekvurus = CreateConVar("zm_tekvurus", "0", "Zombiler tek vurusta insanlari infekte edebilsin (1/0) 0 kapatir.", FCVAR_NOTIFY);
 	//Olaylar
 	HookEvent("teamplay_round_start", round);
 	HookEvent("player_death", death);
@@ -144,7 +141,7 @@ public OnPluginStart()
 	//Tercihler
 	MusicCookie = RegClientCookie("oyuncu_mzk_ayari", "Muzik Ayarı", CookieAccess_Public);
 	//Komut takibi
-	AddCommandListener(hook_JoinClass, "joinclass");
+	//AddCommandListener(hook_JoinClass, "joinclass");
 	AddCommandListener(BlockedCommands, "autoteam");
 	AddCommandListener(BlockedCommandsteam, "jointeam");
 }
@@ -157,7 +154,7 @@ public OnGameFrame() {
 public Action:Event_Resupply(Handle:hEvent, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(hEvent, "userid"));
-	if (ToplamOyuncular() > 0 && client > 0&& client && IsClientInGame(client) && IsPlayerAlive(client) && TF2_GetClientTeam(client) == TFTeam_Blue)
+	if (client > 0 && client && IsClientInGame(client) && IsPlayerAlive(client) && TF2_GetClientTeam(client) == TFTeam_Blue)
 	{
 		zombi(client); //Oyuncular resupply cabinete dokunduğu zaman silahlarını tekrar silmek için. (Zombilerin)
 	}
@@ -254,24 +251,28 @@ public Action:BlockedCommands(client, const String:command[], argc)
 {
 	return Plugin_Handled;
 }
+
 public Action:BlockedCommandsteam(client, const String:command[], argc)
 {
-	if (ToplamOyuncular() > 0 && client > 0 && dalgasuresi > 0 && oyun && GetClientTeam(client) > 1) //Round başladığı halde oyuncular takım değiştirmeye çalışırsa engellensin
+	if (ToplamOyuncular() > 0 && client > 0 && oyun && GetClientTeam(client) > 1) //Round başladığı halde oyuncular takım değiştirmeye çalışırsa engellensin
 	{
 		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun esnasında ya da setup zamanında takım değiştirilemez!");
 		return Plugin_Handled; // Engellemeyi uygula
 	}
 	return Plugin_Continue; // Eğer öyle bir olay yoksa da plugin çalışmaya devam edicek.
 }
+
+/*
 public Action:hook_JoinClass(client, const String:command[], argc)
 {
-	if (ToplamOyuncular() > 0 && client > 0 && sayim <= 0 && oyun && TF2_GetClientTeam(client) == TFTeam_Red)
+	if (client > 0 && sayim <= 0 && oyun && TF2_GetClientTeam(client) == TFTeam_Red)
 	{
 		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun esnasında sınıf değiştiremezsin!");
 		return Plugin_Handled;
 	}
 	return Plugin_Continue;
 }
+*/
 public Action:setup(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	zombimod(); //Round timerin işlemesi için
@@ -280,10 +281,10 @@ public Action:setup(Handle:event, const String:name[], bool:dontBroadcast)
 }
 public Action:OnPlayerBuildObject(Handle:event, const String:name[], bool:dontBroadcast) //Garip bir şekilde çalışmıyor.
 {
-	new entity = GetEventInt(event, "index");
-	CreateTimer(0.1, tBuiltKontrol, EntIndexToEntRef(entity), TIMER_FLAG_NO_MAPCHANGE);
+	//CreateTimer(0.1, tBuiltKontrol, EntIndexToEntRef(entity), TIMER_FLAG_NO_MAPCHANGE);
 	return Plugin_Continue;
 }
+/*
 public Action:tBuiltKontrol(Handle:timer, any:ref)
 {
 	new entity = EntRefToEntIndex(ref);
@@ -298,6 +299,7 @@ public Action:tBuiltKontrol(Handle:timer, any:ref)
 	}
 	return Plugin_Continue;
 }
+*/
 //----------------------MENU HANDLE------------------------------------------
 public Action:msc(client, args)
 {
@@ -320,6 +322,7 @@ public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 	zombimod();
 	setuptime();
 }
+/*
 public Action:Regenerate(Handle:timer, any:client)
 {
 	if (client > 0 && IsClientInGame(client))
@@ -337,12 +340,13 @@ public Action:Regenerate(Handle:timer, any:client)
 		}
 	}
 }
+*/
 public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (TF2_GetClientTeam(client) == TFTeam_Blue)
 	{
-		if (!oyun && sayim > 0 && sayim <= zm_tHazirliksuresi)
+		if (!oyun && sayim > 0 && sayim <= GetConVarInt(zm_tHazirliksuresi))
 		{
 			SetEntProp(client, Prop_Send, "m_lifeState", 2);
 			ChangeClientTeam(client, 2);
@@ -350,7 +354,7 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 			TF2_RespawnPlayer(client);
 			PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun Başlamadan Zombi Olamazsın!");
 		}
-		if (oyun && dalgasuresi > 0 && dalgasuresi <= zm_tDalgasuresi)
+		if (oyun && dalgasuresi > 0 && dalgasuresi <= GetConVarInt(zm_tDalgasuresi))
 		{
 			SetEntityRenderColor(client, 0, 255, 0, 0);
 			zombi(client);
@@ -358,8 +362,6 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 			{
 				case TFClass_Scout:
 				{
-					flspeed = 280.0;
-					SetEntPropFloat(client, Prop_Send, "m_flMaxspeed", flspeed);
 				}
 			}
 		}
@@ -371,14 +373,11 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 			case TFClass_Spy:
 			{
 				TF2_RemoveWeaponSlot(client, 3);
-				//TF2_RemoveWeaponSlot(client, 4);
-				//EquipPlayerWeapon(client, GivePlayerItem(client, "tf_weapon_invis"));
 				new slot = GetPlayerWeaponSlot(client, 4);
 				if (IsValidEntity(slot))
 				{
 					decl String:classname[64];
 					if (GetEntityClassname(slot, classname, sizeof(classname)) && StrContains(classname, "tf_weapon", false) != -1)
-						//case 46, 163, 222, 32: {}
 					{
 						switch (GetEntProp(slot, Prop_Send, "m_iItemDefinitionIndex"))
 						{
@@ -402,7 +401,6 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 		}
 	}
 }
-//ForcePlayerSuicide
 public Action:death(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new victim = GetClientOfUserId(GetEventInt(event, "userid"));
@@ -420,13 +418,12 @@ public Action:death(Handle:event, const String:name[], bool:dontBroadcast)
 }
 public Action:hazirlik(Handle:timer, any:client)
 {
-	if(ToplamOyuncular() > 0)
+	if (ToplamOyuncular() > 0)
 	{
 		sayim--;
-        }
-	if (sayim <= zm_tHazirliksuresi && sayim > 0)
+	}
+	if (sayim <= GetConVarInt(zm_tHazirliksuresi) && sayim > 0)
 	{
-		//izleyicikontrolu();
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Setup:%02d:%02d", sayim / 60, sayim % 60);
 		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "☠Zombi☠:%d", TakimdakiOyuncular(3));
 		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "Insan:%d", TakimdakiOyuncular(2));
@@ -449,41 +446,22 @@ public Action:hazirlik(Handle:timer, any:client)
 		{
 			zombi(rastgelezombi());
 		}
-		//new num = TakimdakiOyuncular(2);
-		/*
-		if (TakimdakiOyuncular(3) == 0 && num > 0)
-		{
-			new num2; //belirtilen deger
-			switch (num)
-			{
-				//num = num2 - num
-				case 0, 1, 2, 3, 4, 5, 6, 7, 8, 9:num2 = 1; // case 0-5
-				case 10, 11, 12, 13, 14, 15, 16, 17, 18, 19:num2 = 2; // case 5-10
-				case 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32:num2 = 3; // case 10-15
-			}
-			for (new i = 0; i <= num2; i++)
-			{
-				zombi(rastgelezombi());
-			}
-		}
-		*/
 	}
 }
 public Action:TimerSnd1(Handle:timer, any:id)
 {
-	if(!oyun && sayim > 0)
+	if (!oyun && sayim > 0)
 	{
 		EmitSoundToAll(sarkir_01);
-		PrintToServer("SOUND WORKING");
-        }
+	}
 }
 public Action:oyun1(Handle:timer, any:id)
 {
-	if(ToplamOyuncular() > 0)
+	if (ToplamOyuncular() > 0)
 	{
 		dalgasuresi--;
-        }
-	if (dalgasuresi <= zm_tDalgasuresi && dalgasuresi > 0 && oyun)
+	}
+	if (dalgasuresi <= GetConVarInt(zm_tDalgasuresi) && dalgasuresi > 0 && oyun)
 	{
 		izleyicikontrolu();
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Round:%02d:%02d", dalgasuresi / 60, dalgasuresi % 60);
@@ -529,7 +507,6 @@ zombi(client)
 		ChangeClientTeam(client, 3);
 		SetEntProp(client, Prop_Send, "m_lifeState", 0);
 		SetEntityRenderColor(client, 0, 255, 0, 0);
-		//new HP = GetClientHealth(client)
 		SetEntityHealth(client, 315);
 	}
 	CreateTimer(0.1, silah, client, TIMER_FLAG_NO_MAPCHANGE);
@@ -588,7 +565,6 @@ kazanantakim(takim)
 		DispatchSpawn(ent);
 	} else {
 		SetVariantInt(takim);
-		//AcceptEntityInput(ent, "Enable");SetTeam
 		kazanan = true;
 		AcceptEntityInput(ent, "SetWinner");
 	}
@@ -677,9 +653,6 @@ public Action:Timer_Song(Handle:timer, any:client)
 	{
 		if (OyuncuMuzikAyari(client, true))
 		{
-			//EmitSoundToClient(client, sarkir_01, _, _, SNDLEVEL_NONE);
-			//muzikclients();
-			//Diger sarkilar
 		}
 	}
 }
@@ -754,7 +727,6 @@ public Action:Timer_SetTime(Handle:timer, any:ent)
 	SetVariantInt(GetConVarInt(zm_tDalgasuresi)); // 600 sec ~ 10min
 	AcceptEntityInput(ent, "SetTime");
 }
-//mp_restartgame'dan daha çabuk yöntem.
 oyunuresetle()
 {
 	if (kazanan)
@@ -779,7 +751,6 @@ public Action:res(Handle:timer, any:id)
 }
 MuzikDurdurma(client)
 {
-	//StopSound(client, SNDCHAN_AUTO, snd1);
 	PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCMüzikler durduruldu.");
 }
 MuzikAc(client)
@@ -966,6 +937,5 @@ public Action:TF2_CalcIsAttackCritical(id, weapon, String:weaponname[], &bool:re
 public OnMapEnd()
 {
 	getrand = false;
-} 
-//Escape Haritalarında round süresine ekstra süre eklenenice!
+}
 //OnMapTimeLeftChanged()
