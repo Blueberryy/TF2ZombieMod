@@ -836,7 +836,7 @@ izleyicikontrolu()
 {
 	for (new i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientInGame(i) && TF2_GetClientTeam(i) == TFTeam_Spectator)
+		if (IsClientInGame(i) && TF2_GetClientTeam(i) == TFTeam_Spectator && oyun)
 		{
 			ChangeClientTeam(i, 3);
 			TF2_SetPlayerClass(i, TFClass_Scout);
