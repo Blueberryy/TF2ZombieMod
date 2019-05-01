@@ -1,4 +1,4 @@
-
+#define TIMER_FLAG_NO_MAPCHANGE (1<<1)   
 #pragma semicolon 1
 #pragma tabsize 0
 #define DEBUG
@@ -73,7 +73,7 @@ public OnMapStart()
 public OnClientPutInServer(id)
 {
 	SDKHook(id, SDKHook_OnTakeDamage, OnTakeDamage);
-	if (id > 0 && IsClientInGame(id) && oyun && TakimdakiOyuncular(3) > 0 && sayim <= 0)
+	if (id > 0 && IsValidClient(id) && IsClientInGame(id) && oyun && TakimdakiOyuncular(3) > 0)
 	{
 		ChangeClientTeam(id, 3);
 		CreateTimer(1.0, ClassSelection, id, TIMER_FLAG_NO_MAPCHANGE);
@@ -91,6 +91,7 @@ public OnPluginStart()
 	//Konsol Komutları
 	RegConsoleCmd("sm_msc", msc);
 	RegConsoleCmd("sm_menu", zmenu);
+	RegConsoleCmd("sm_oync", oyuncu1);
 	//Zamanlayıcılar
 	CreateTimer(1.0, hazirlik, _, TIMER_REPEAT);
 	CreateTimer(1.0, oyun1, _, TIMER_REPEAT);
@@ -251,6 +252,10 @@ public Action:msc(client, args)
 	hMuzik.ExitButton = false;
 	hMuzik.Display(client, 20);
 	
+}
+public Action:oyuncu1(client, args)
+{
+	PrintToServer("oyuncu:%d", ToplamOyuncular());
 }
 ///////////////////////////////////////////////////////////////////////////////
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
@@ -420,6 +425,7 @@ stock rastgelezombi()
 	}
 	return (num == 0) ? 0 : oyuncular[GetRandomInt(0, num - 1)];
 }
+
 zombi(client)
 {
 	if (client > 0 && IsClientInGame(client))
@@ -836,7 +842,7 @@ izleyicikontrolu()
 {
 	for (new i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientInGame(i) && TF2_GetClientTeam(i) == TFTeam_Spectator && oyun)
+		if (IsClientInGame(i) && TF2_GetClientTeam(i) == TFTeam_Spectator &&  oyun)
 		{
 			ChangeClientTeam(i, 3);
 			TF2_SetPlayerClass(i, TFClass_Scout);
