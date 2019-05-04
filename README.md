@@ -10,8 +10,8 @@ zm_dalgasuresi
 
 zm_tekvurus
 
-HARİTALAR LİSTES!!!!!!!!! (Old link / map list)
-https://ufile.io/jlk07
+New Map Link;
+https://gofile.io/?t=uploadFiles
 
 /// You Shouldn't change the official values of the convars. (60 = setup, 225 = wave time) If it isn't necessesary.
 
