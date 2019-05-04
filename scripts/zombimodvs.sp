@@ -5,7 +5,6 @@
 
 #define PLUGIN_AUTHOR "steamId=crackersarenoice"
 #define PLUGIN_VERSION "1.03"
-#define sarkir_01 "left4fortress/rabies01.mp3"
 #define PLAYERBUILTOBJECT_ID_DISPENSER 0
 #define PLAYERBUILTOBJECT_ID_TELENT    1
 #define PLAYERBUILTOBJECT_ID_TELEXIT   2
@@ -33,7 +32,6 @@
 new Handle:zm_tDalgasuresi = INVALID_HANDLE;
 new Handle:zm_tHazirliksuresi = INVALID_HANDLE;
 new Handle:zm_hTekvurus = INVALID_HANDLE;
-new Handle:zm_hRoundSayisi = INVALID_HANDLE;
 new Handle:MusicCookie;
 new Handle:g_hTimer = INVALID_HANDLE;
 new Handle:g_hSTimer = INVALID_HANDLE;
@@ -46,7 +44,6 @@ new bool:getrand = false;
 new sayim;
 new dalgasuresi;
 new bool:kazanan;
-
 new g_maxHealth[10] =  { 0, 125, 125, 200, 175, 150, 300, 175, 125, 125 };
 
 public Plugin:myinfo = 
@@ -72,8 +69,6 @@ public OnMapStart()
 	zombimod();
 	setuptime();
 	//Sounds
-	PrecacheSound(sarkir_01, true);
-	AddFileToDownloadsTable("sound/left4fortress/rabies01.mp3");
 	
 	ClearTimer(g_hTimer);
 }
@@ -117,13 +112,10 @@ public OnPluginStart()
 	RegConsoleCmd("sm_msc", msc);
 	RegConsoleCmd("sm_menu", zmenu);
 	//Zamanlayıcılar
-	//CreateTimer(1.0, hazirlik, _, TIMER_REPEAT);
-	//g_hTimer = CreateTimer(1.0, oyun1, _, TIMER_REPEAT);
 	CreateTimer(200.0, yazi1, _, TIMER_REPEAT);
 	CreateTimer(220.0, yazi2, _, TIMER_REPEAT);
 	CreateTimer(120.0, yazi4, _, TIMER_REPEAT);
 	CreateTimer(190.0, yazi3, _, TIMER_REPEAT);
-	CreateTimer(60.0, TimerSnd1, _, TIMER_REPEAT);
 	//Convarlar
 	zm_tHazirliksuresi = CreateConVar("zm_setup", "60", "Setup suresi/Hazirlik Suresi", FCVAR_NOTIFY);
 	zm_tDalgasuresi = CreateConVar("zm_dalgasuresi", "225", "Setup bittikten sonraki round zamani", FCVAR_NOTIFY);
@@ -142,7 +134,6 @@ public OnPluginStart()
 	ServerCommand("mp_autoteambalance 0");
 	ServerCommand("mp_teams_unbalance_limit 0");
 	ServerCommand("mp_respawnwavetime 0 ");
-	//ServerCommand("mp_restartgame 1 ");
 	ServerCommand("mp_disable_respawn_times 1 ");
 	ServerCommand("sm_cvar mp_waitingforplayers_time 25");
 	ServerCommand("sm_cvar tf_spy_invis_time 0.5"); // Locked 
@@ -310,6 +301,7 @@ public Action:Event_RoundEnd(Handle:hEvent, const String:strName[], bool:bDontBr
 {
 	ClearTimer(g_hTimer);
 	ClearTimer(g_hSTimer);
+	oyunuresetle();
 }
 public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -360,7 +352,7 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 				{
 					TF2_SetPlayerClass(client, TFClass_Scout);
 					TF2_RespawnPlayer(client);
-					PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCEngineer limiti aşıldı, (ŞuAnkiEngiler)Limit:%d!", sinifsayisi(TFClass_Engineer));
+					PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCEngineer limiti aşıldı(2), Hayatta olan Engi sayisi:%d", sinifsayisi(TFClass_Engineer));
 				}
 			}
 		}
@@ -411,13 +403,6 @@ public Action:hazirlik(Handle:timer, any:client)
 		}
 	}
 }
-public Action:TimerSnd1(Handle:timer, any:id)
-{
-	if (!oyun && sayim > 0)
-	{
-		EmitSoundToAll(sarkir_01);
-	}
-}
 public Action:oyun1(Handle:timer, any:id)
 {
 	if (ToplamOyuncular() > 0)
@@ -463,7 +448,6 @@ stock rastgelezombi()
 	}
 	return (num == 0) ? 0 : oyuncular[GetRandomInt(0, num - 1)];
 }
-
 zombi(client)
 {
 	if (client > 0 && IsClientInGame(client))
@@ -605,7 +589,6 @@ setuptime()
 		if (bTimer)
 		{
 			CreateTimer(1.0, Timer_SetTimeSetup, ent1, TIMER_FLAG_NO_MAPCHANGE);
-			CreateTimer(1.0, Timer_Song, _, TIMER_FLAG_NO_MAPCHANGE);
 		}
 	} else {
 		bTimer = false;
@@ -619,15 +602,6 @@ public Action:Timer_SetTimeSetup(Handle:timer, any:ent1)
 {
 	SetVariantInt(GetConVarInt(zm_tHazirliksuresi));
 	AcceptEntityInput(ent1, "SetTime");
-}
-public Action:Timer_Song(Handle:timer, any:client)
-{
-	if (bTimer)
-	{
-		if (OyuncuMuzikAyari(client, true))
-		{
-		}
-	}
 }
 zombimod()
 {
@@ -855,14 +829,13 @@ izleyicikontrolu()
 }
 public Action:TF2_CalcIsAttackCritical(id, weapon, String:weaponname[], &bool:result)
 {
-	if (StrEqual(weaponname, "tf_weapon_compound_bow", false))
+	if (StrEqual(weaponname, "tf_weapon_compound_bow", false) || StrEqual(weaponname, "tf_weapon_fists", false) || StrEqual(weaponname, "tf_weapon_crossbow", false) || StrEqual(weaponname, "tf_weapon_sword", false))
 	{
 		result = true;
 		return Plugin_Changed;
 	}
 	return Plugin_Continue;
 }
-//OnMapTimeLeftChanged()
 stock ClearTimer(&Handle:hTimer)
 {
 	if (hTimer != INVALID_HANDLE)
