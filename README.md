@@ -11,7 +11,7 @@ zm_dalgasuresi
 zm_tekvurus
 
 New Map Link;
-https://gofile.io/?t=uploadFiles
+https://gofile.io/?c=jEF1Ap
 
 /// You Shouldn't change the official values of the convars. (60 = setup, 225 = wave time) If it isn't necessesary.
 
