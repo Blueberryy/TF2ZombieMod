@@ -141,7 +141,7 @@ public OnPluginStart()
 	//Tercihler
 	MusicCookie = RegClientCookie("oyuncu_mzk_ayari", "Muzik Ayarı", CookieAccess_Public);
 	//Komut takibi
-	//AddCommandListener(hook_JoinClass, "joinclass");
+	AddCommandListener(hook_JoinClass, "joinclass");
 	AddCommandListener(BlockedCommands, "autoteam");
 	AddCommandListener(BlockedCommandsteam, "jointeam");
 }
@@ -260,7 +260,15 @@ public Action:BlockedCommandsteam(client, const String:command[], argc)
 	}
 	return Plugin_Continue; // Eğer öyle bir olay yoksa da plugin çalışmaya devam edicek.
 }
-
+public Action:hook_JoinClass(client, const String:command[], argc)
+{
+	if (client > 0 && client <= MaxClients && oyun && GetClientTeam(client) == 2) //Round başladığı halde oyuncular takım değiştirmeye çalışırsa engellensin
+	{
+		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun esnasında sınıf değiştiremezsiniz!");
+		return Plugin_Handled; // Engellemeyi uygula
+	}
+	return Plugin_Continue; // Eğer öyle bir olay yoksa da plugin çalışmaya devam edicek.
+}
 public Action:setup(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	zombimod(); //Round timerin işlemesi için
