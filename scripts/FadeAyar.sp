@@ -32,12 +32,24 @@ public OnPluginStart()
 {
 	HookEvent("player_spawn", spawn);
 	g_FadeUserMsgId = GetUserMessageId("Fade");
+	AddCommandListener(Listener_Voice, "voicemenu");
+}
+public Action:Listener_Voice(client, const String:command[], argc) {
+       decl String:arguments[4];
+       GetCmdArgString(arguments, sizeof(arguments));
+       if (StrEqual(arguments, "0 0")) {
+       	       SetClientOverlay(client, "effects/combine_binocoverlay");
+       } else {
+       	        SetClientOverlay(client, " ");
+       	        return Plugin_Continue;
+       }
 }
 public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if(GetClientTeam(client) == TFTeam_Blue) {
-		SetClientOverlay(client, "debug/yuv");
+		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCZombi Görüşünü Açmak için 'e' ye bas.");
+		SetClientOverlay(client, " ");
         }
         else if(GetClientTeam(client) == TFTeam_Red) {
         	        SetClientOverlay(client, " ");
