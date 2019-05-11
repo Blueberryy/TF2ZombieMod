@@ -35,25 +35,27 @@ public OnPluginStart()
 	AddCommandListener(Listener_Voice, "voicemenu");
 }
 public Action:Listener_Voice(client, const String:command[], argc) {
-       decl String:arguments[4];
-       GetCmdArgString(arguments, sizeof(arguments));
-       if (StrEqual(arguments, "0 0")) {
-       	       SetClientOverlay(client, "Effects/c17_07camera");
-       } else {
-       	        SetClientOverlay(client, " ");
-       	        return Plugin_Continue;
-       }
+	decl String:arguments[4];
+	GetCmdArgString(arguments, sizeof(arguments));
+	if (StrEqual(arguments, "0 0")) {
+		if (GetClientTeam(client) == 3) {
+			SetClientOverlay(client, "effects/combine_binocoverlay");
+		}
+	} else {
+		SetClientOverlay(client, " ");
+		return Plugin_Continue;
+	}
 }
 public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
-	if(GetClientTeam(client) == TFTeam_Blue) {
+	if (GetClientTeam(client) == TFTeam_Blue) {
 		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCZombi Görüşünü Açmak için 'e' ye bas.");
 		SetClientOverlay(client, " ");
-        }
-        else if(GetClientTeam(client) == TFTeam_Red) {
-        	        SetClientOverlay(client, " ");
-        }
+	}
+	else if (GetClientTeam(client) == TFTeam_Red) {
+		SetClientOverlay(client, " ");
+	}
 }
 SetClientOverlay(client, String:strOverlay[])
 {
@@ -71,9 +73,9 @@ BlindPlayer(client, iAmount)
 	BfWriteShort(message, 1536);
 	BfWriteShort(message, 1536);
 	
-	if(iAmount == 0) {
+	if (iAmount == 0) {
 		BfWriteShort(message, (0x0001 | 0x0010));
-	} else{
+	} else {
 		BfWriteShort(message, (0x0002 | 0x0008));
 	}
 	
@@ -83,4 +85,4 @@ BlindPlayer(client, iAmount)
 	BfWriteByte(message, iAmount);
 	
 	EndMessage();
-}
+} 
