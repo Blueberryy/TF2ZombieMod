@@ -38,7 +38,7 @@ public Action:Listener_Voice(client, const String:command[], argc) {
        decl String:arguments[4];
        GetCmdArgString(arguments, sizeof(arguments));
        if (StrEqual(arguments, "0 0")) {
-       	       SetClientOverlay(client, "effects/combine_binocoverlay");
+       	       SetClientOverlay(client, "Effects/c17_07camera");
        } else {
        	        SetClientOverlay(client, " ");
        	        return Plugin_Continue;
