@@ -68,16 +68,14 @@ public OnMapStart()
 {
 	zombimod();
 	setuptime();
-	//Sounds
-	
 	ClearTimer(g_hTimer);
+	//PrecacheModel("models/zombie/classic.mdl");
 }
 public OnMapEnd()
 {
 	getrand = false;
 	ClearTimer(g_hTimer);
 	ClearTimer(g_hSTimer);
-	//g_hTimer = CreateTimer(1.0, oyun1, _, TIMER_REPEAT);
 }
 public OnClientPutInServer(id)
 {
@@ -132,6 +130,7 @@ public OnPluginStart()
 	HookEvent("teamplay_round_win", Event_RoundEnd);
 	
 	ServerCommand("mp_autoteambalance 0");
+	ServerCommand("mp_scrambleteams_auto 0");
 	ServerCommand("mp_teams_unbalance_limit 0");
 	ServerCommand("mp_respawnwavetime 0 ");
 	ServerCommand("mp_disable_respawn_times 1 ");
@@ -267,10 +266,6 @@ public Action:setup(Handle:event, const String:name[], bool:dontBroadcast)
 	zombimod(); //Round timerin işlemesi için
 	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCHazırlık bitti!");
 }
-public Action:OnPlayerBuildObject(Handle:event, const String:name[], bool:dontBroadcast) //Garip bir şekilde çalışmıyor.
-{
-	return Plugin_Continue;
-}
 //----------------------MENU HANDLE------------------------------------------
 public Action:msc(client, args)
 {
@@ -282,7 +277,6 @@ public Action:msc(client, args)
 	hMuzik.Display(client, 20);
 	
 }
-///////////////////////////////////////////////////////////////////////////////
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	oyun = false; // Setup bitmeden round başlayamaz
@@ -455,6 +449,7 @@ zombi(client)
 		SetEntProp(client, Prop_Send, "m_lifeState", 2);
 		ChangeClientTeam(client, 3);
 		SetEntProp(client, Prop_Send, "m_lifeState", 0);
+		//SetEntityModel(client, "models/zombie/classic.mdl");
 		SetEntityRenderColor(client, 0, 255, 0, 0);
 	}
 	CreateTimer(0.1, silah, client, TIMER_FLAG_NO_MAPCHANGE);
@@ -829,7 +824,7 @@ izleyicikontrolu()
 }
 public Action:TF2_CalcIsAttackCritical(id, weapon, String:weaponname[], &bool:result)
 {
-	if (StrEqual(weaponname, "tf_weapon_compound_bow", false) || StrEqual(weaponname, "tf_weapon_fists", false) || StrEqual(weaponname, "tf_weapon_crossbow", false) || StrEqual(weaponname, "tf_weapon_sword", false))
+	if (StrEqual(weaponname, "tf_weapon_compound_bow", false) || StrEqual(weaponname, "tf_weapon_fists", false) || StrEqual(weaponname, "tf_weapon_crossbow", false))
 	{
 		result = true;
 		return Plugin_Changed;
