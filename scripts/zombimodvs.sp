@@ -1,7 +1,8 @@
-#define TIMER_FLAG_NO_MAPCHANGE (1<<1)   
+
 #pragma semicolon 1
 #pragma tabsize 0
 #define DEBUG
+#define TIMER_FLAG_NO_MAPCHANGE (1<<1)   
 
 #define PLUGIN_AUTHOR "steamId=crackersarenoice"
 #define PLUGIN_VERSION "1.03"
@@ -36,14 +37,12 @@ new Handle:MusicCookie;
 new Handle:g_hTimer = INVALID_HANDLE;
 new Handle:g_hSTimer = INVALID_HANDLE;
 //bools
-new bool:bTimer = false;
-new bool:oyun;
-new bool:timer1 = false;
+new bool:g_bOyun;
 new bool:getrand = false;
 //ints
-new sayim;
-new dalgasuresi;
-new bool:kazanan;
+new g_iSetupCount;
+new g_iDalgaSuresi;
+new bool:g_bKazanan;
 new g_maxHealth[10] =  { 0, 125, 125, 200, 175, 150, 300, 175, 125, 125 };
 
 public Plugin:myinfo = 
@@ -69,7 +68,6 @@ public OnMapStart()
 	zombimod();
 	setuptime();
 	ClearTimer(g_hTimer);
-	//PrecacheModel("models/zombie/classic.mdl");
 }
 public OnMapEnd()
 {
@@ -81,7 +79,7 @@ public OnClientPutInServer(id)
 {
 	SDKHook(id, SDKHook_OnTakeDamage, OnTakeDamage);
 	SDKHook(id, SDKHook_GetMaxHealth, OnGetMaxHealth);
-	if (id > 0 && IsValidClient(id) && IsClientInGame(id) && oyun && TakimdakiOyuncular(3) > 0)
+	if (id > 0 && IsValidClient(id) && IsClientInGame(id) && g_bOyun && TakimdakiOyuncular(3) > 0)
 	{
 		ChangeClientTeam(id, 3);
 		CreateTimer(1.0, ClassSelection, id, TIMER_FLAG_NO_MAPCHANGE);
@@ -128,7 +126,7 @@ public OnPluginStart()
 	HookEvent("post_inventory_application", Event_Resupply);
 	HookEvent("round_end", Event_RoundEnd);
 	HookEvent("teamplay_round_win", Event_RoundEnd);
-	
+	//Set
 	ServerCommand("mp_autoteambalance 0");
 	ServerCommand("mp_scrambleteams_auto 0");
 	ServerCommand("mp_teams_unbalance_limit 0");
@@ -151,7 +149,7 @@ public Action:OnGetMaxHealth(client, &maxhealth)
 	{
 		if (TF2_GetClientTeam(client) == TFTeam_Blue)
 		{
-			maxhealth = g_maxHealth[TF2_GetPlayerClass(client)] * 3;
+			maxhealth = g_maxHealth[TF2_GetPlayerClass(client)] * 2;
 			return Plugin_Handled;
 		}
 	}
@@ -191,7 +189,7 @@ public HookPlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 public Action:captured(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new entity = GetClientOfUserId(GetEventInt(event, "userid"));
-	kazanan = true;
+	g_bKazanan = true;
 	new capT = GetEntProp(entity, Prop_Send, "m_iOwner");
 	kazanantakim(capT);
 	oyunuresetle(); //Control point capture edildiği zaman resetlenme gerçekleşicek
@@ -253,7 +251,7 @@ public Action:BlockedCommands(client, const String:command[], argc)
 
 public Action:BlockedCommandsteam(client, const String:command[], argc)
 {
-	if (ToplamOyuncular() > 0 && client > 0 && oyun && GetClientTeam(client) > 1) //Round başladığı halde oyuncular takım değiştirmeye çalışırsa engellensin
+	if (ToplamOyuncular() > 0 && client > 0 && g_bOyun && GetClientTeam(client) > 1) //Round başladığı halde oyuncular takım değiştirmeye çalışırsa engellensin
 	{
 		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun esnasında ya da setup zamanında takım değiştirilemez!");
 		return Plugin_Handled; // Engellemeyi uygula
@@ -262,7 +260,7 @@ public Action:BlockedCommandsteam(client, const String:command[], argc)
 }
 public Action:hook_JoinClass(client, const String:command[], argc)
 {
-	if (client > 0 && client <= MaxClients && oyun && GetClientTeam(client) == 2) //Round başladığı halde oyuncular takım değiştirmeye çalışırsa engellensin
+	if (client > 0 && client <= MaxClients && g_bOyun && GetClientTeam(client) == 2) //Round başladığı halde oyuncular takım değiştirmeye çalışırsa engellensin
 	{
 		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun esnasında sınıf değiştiremezsiniz!");
 		return Plugin_Handled; // Engellemeyi uygula
@@ -287,12 +285,11 @@ public Action:msc(client, args)
 }
 public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	oyun = false; // Setup bitmeden round başlayamaz
-	sayim = GetConVarInt(zm_tHazirliksuresi); //Setup zamanlayicisinin convarın değerini alması için
-	dalgasuresi = GetConVarInt(zm_tDalgasuresi); //Round zamanlayicisinin convarın değerini alması için
-	kazanan = false;
+	g_bOyun = false; // Setup bitmeden round başlayamaz
+	g_iSetupCount = GetConVarInt(zm_tHazirliksuresi); //Setup zamanlayicisinin convarın değerini alması için
+	g_iDalgaSuresi = GetConVarInt(zm_tDalgasuresi); //Round zamanlayicisinin convarın değerini alması için
+	g_bKazanan = false;
 	getrand = false;
-	zombimod();
 	setuptime();
 	ClearTimer(g_hTimer);
 	ClearTimer(g_hSTimer);
@@ -310,7 +307,7 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (TF2_GetClientTeam(client) == TFTeam_Blue)
 	{
-		if (!oyun && sayim > 0 && sayim <= GetConVarInt(zm_tHazirliksuresi))
+		if (!g_bOyun && g_iSetupCount > 0 && g_iSetupCount <= GetConVarInt(zm_tHazirliksuresi))
 		{
 			SetEntProp(client, Prop_Send, "m_lifeState", 2);
 			ChangeClientTeam(client, 2);
@@ -318,13 +315,10 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 			TF2_RespawnPlayer(client);
 			PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun Başlamadan Zombi Olamazsın!");
 		}
-		if (oyun && dalgasuresi > 0 && dalgasuresi <= GetConVarInt(zm_tDalgasuresi))
+		if (g_bOyun && g_iDalgaSuresi > 0 && g_iDalgaSuresi <= GetConVarInt(zm_tDalgasuresi))
 		{
 			SetEntityRenderColor(client, 0, 255, 0, 0);
 			zombi(client);
-			switch (TF2_GetPlayerClass(client))
-			{
-			}
 		}
 	} else {
 		SetEntityRenderColor(client, 255, 255, 255, 0);
@@ -367,7 +361,7 @@ public Action:death(Handle:event, const String:name[], bool:dontBroadcast)
 	{
 		return;
 	}
-	if (GetClientTeam(victim) == 2 && oyun)
+	if (GetClientTeam(victim) == 2 && g_bOyun)
 	{
 		zombi(victim);
 		HUD(-1.0, 0.2, 6.0, 255, 0, 0, 2, "\n☠☠☠\n%N", victim);
@@ -377,53 +371,47 @@ public Action:hazirlik(Handle:timer, any:client)
 {
 	if (ToplamOyuncular() > 0)
 	{
-		sayim--;
+		g_iSetupCount--;
 	}
-	if (sayim <= GetConVarInt(zm_tHazirliksuresi) && sayim > 0)
+	if (g_iSetupCount <= GetConVarInt(zm_tHazirliksuresi) && g_iSetupCount > 0)
 	{
-		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Setup:%02d:%02d", sayim / 60, sayim % 60);
+		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Setup:%02d:%02d", g_iSetupCount / 60, g_iSetupCount % 60);
 		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "☠Zombi☠:%d", TakimdakiOyuncular(3));
 		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "Insan:%d", TakimdakiOyuncular(2));
-		dalgasuresi = GetConVarInt(zm_tDalgasuresi);
-		oyun = false;
+		g_iDalgaSuresi = GetConVarInt(zm_tDalgasuresi);
+		g_bOyun = false;
 	} else {
-		oyun = true;
-		if (TakimdakiOyuncular(3) == 0 && TakimdakiOyuncular(2) > 9 && oyun && !getrand)
-		{
-			zombi(rastgelezombi());
-			zombi(rastgelezombi());
-			if (TakimdakiOyuncular(2) > 20)
-			{
-				zombi(rastgelezombi());
-				zombi(rastgelezombi());
-				zombi(rastgelezombi());
-			}
-		}
+		g_bOyun = true;
+		if (TakimdakiOyuncular(3) == 0 && TakimdakiOyuncular(2) > 9 && g_bOyun && !getrand)
+			zombi(rastgelezombi()), zombi(rastgelezombi());
 		else if (TakimdakiOyuncular(3) == 0 && TakimdakiOyuncular(2) < 9 && !getrand)
-		{
 			zombi(rastgelezombi());
-		}
+		else if(TakimdakiOyuncular(3) == 0 && TakimdakiOyuncular(2) > 20 && !getrand)
+		        zombi(rastgelezombi()), zombi(rastgelezombi()), zombi(rastgelezombi());
 	}
 }
 public Action:oyun1(Handle:timer, any:id)
 {
 	if (ToplamOyuncular() > 0)
 	{
-		dalgasuresi--;
+		g_iDalgaSuresi--;
 	}
-	if (dalgasuresi <= GetConVarInt(zm_tDalgasuresi) && dalgasuresi > 0 && oyun)
+	if (g_iDalgaSuresi <= GetConVarInt(zm_tDalgasuresi) && g_iDalgaSuresi > 0 && g_bOyun)
 	{
 		izleyicikontrolu();
-		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Round:%02d:%02d", dalgasuresi / 60, dalgasuresi % 60);
+		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Round:%02d:%02d", g_iDalgaSuresi / 60, g_iDalgaSuresi % 60);
 		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "☠Zombiler☠:%d", TakimdakiOyuncular(3));
 		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "İnsanlar:%d", TakimdakiOyuncular(2));
+		if(g_iDalgaSuresi == GetConVarInt(zm_tDalgasuresi) - 3) {
+			setuptime();
+	        }
 		if (TakimdakiOyuncular(2) == 0) //2 red 3 blue
 		{
 			kazanantakim(3);
 			oyunuresetle();
 		}
 	}
-	else if (dalgasuresi <= 0 && oyun)
+	else if (g_iDalgaSuresi <= 0 && g_bOyun)
 	{
 		if (TakimdakiOyuncular(2) > 0)
 		{
@@ -443,7 +431,7 @@ stock rastgelezombi()
 	new oyuncular[MaxClients + 1], num;
 	for (new i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientInGame(i) && GetClientTeam(i) > 1 && TF2_GetPlayerClass(i) != TFClass_Engineer && oyun)
+		if (IsClientInGame(i) && GetClientTeam(i) > 1 && TF2_GetPlayerClass(i) != TFClass_Engineer && g_bOyun)
 		{
 			oyuncular[num++] = i;
 		}
@@ -457,7 +445,6 @@ zombi(client)
 		SetEntProp(client, Prop_Send, "m_lifeState", 2);
 		ChangeClientTeam(client, 3);
 		SetEntProp(client, Prop_Send, "m_lifeState", 0);
-		//SetEntityModel(client, "models/zombie/classic.mdl");
 		SetEntityRenderColor(client, 0, 255, 0, 0);
 	}
 	CreateTimer(0.1, silah, client, TIMER_FLAG_NO_MAPCHANGE);
@@ -516,7 +503,7 @@ kazanantakim(takim)
 		DispatchSpawn(ent);
 	} else {
 		SetVariantInt(takim);
-		kazanan = true;
+		g_bKazanan = true;
 		AcceptEntityInput(ent, "SetWinner");
 	}
 }
@@ -583,50 +570,29 @@ setuptime()
 	new ent1 = FindEntityByClassname(MaxClients + 1, "team_round_timer");
 	if (ent1 == -1)
 	{
-		PrintToServer("Bu haritada round timer yok!");
-		return;
+		ent1 = CreateEntityByName("team_round_timer");
+		DispatchSpawn(ent1);
 	}
-	if (sayim > 0)
-	{
-		bTimer = true;
-		if (bTimer)
-		{
-			CreateTimer(1.0, Timer_SetTimeSetup, ent1, TIMER_FLAG_NO_MAPCHANGE);
-		}
-	} else {
-		bTimer = false;
-		if (!bTimer)
-		{
-			CreateTimer(1.0, Timer_SetRoundTime, ent1, TIMER_FLAG_NO_MAPCHANGE);
-		}
-	}
+	CreateTimer(1.0, Timer_SetTimeSetup, ent1, TIMER_FLAG_NO_MAPCHANGE);
 }
 public Action:Timer_SetTimeSetup(Handle:timer, any:ent1)
 {
-	SetVariantInt(GetConVarInt(zm_tHazirliksuresi));
-	AcceptEntityInput(ent1, "SetTime");
+	if(g_iSetupCount > 0) {
+		SetVariantInt(GetConVarInt(zm_tHazirliksuresi));
+		AcceptEntityInput(ent1, "SetTime");
+        }
+	else if(g_iSetupCount < 0) {
+		SetVariantInt(GetConVarInt(zm_tDalgasuresi));
+		AcceptEntityInput(ent1, "SetTime");
+        }
 }
 zombimod()
 {
-	new ent = FindEntityByClassname(MaxClients + 1, "team_round_timer");
-	if (ent == -1)
-	{
-		return;
-	}
-	decl String:mapv[6];
+	decl String:mapv[32];
 	GetCurrentMap(mapv, sizeof(mapv));
 	if (!StrContains(mapv, "zf_", false) || !StrContains(mapv, "szf_", false) || !StrContains(mapv, "zm_", false) || !StrContains(mapv, "zom_", false) || !StrContains(mapv, "zs_", false))
 	{
-		if (sayim < 0)
-		{
-			timer1 = true;
-		} else {
-			timer1 = false;
-		}
-	}
-	if (timer1)
-	{
-		bTimer = false;
+		PrintToServer("\n\n\nZombi Haritası tespit edildi!\n\n\n");
 	}
 }
 public Action:Timer_SetRoundTime(Handle:timer, any:ent1)
@@ -636,7 +602,7 @@ public Action:Timer_SetRoundTime(Handle:timer, any:ent1)
 }
 oyunuresetle()
 {
-	if (kazanan)
+	if (g_bKazanan)
 	{
 		CreateTimer(15.0, res, _, TIMER_FLAG_NO_MAPCHANGE);
 	}
@@ -822,7 +788,7 @@ izleyicikontrolu()
 {
 	for (new i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientInGame(i) && TF2_GetClientTeam(i) == TFTeam_Spectator && oyun)
+		if (IsClientInGame(i) && TF2_GetClientTeam(i) == TFTeam_Spectator && g_bOyun)
 		{
 			ChangeClientTeam(i, 3);
 			TF2_SetPlayerClass(i, TFClass_Scout);
