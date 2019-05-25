@@ -39,11 +39,13 @@ new Handle:g_hSTimer = INVALID_HANDLE;
 //bools
 new bool:g_bOyun;
 new bool:getrand = false;
+new bool:g_bOnlyZMaps;
 //ints
 new g_iSetupCount;
 new g_iDalgaSuresi;
 new bool:g_bKazanan;
 new g_maxHealth[10] =  { 0, 125, 125, 200, 175, 150, 300, 175, 125, 125 };
+new g_iMapPrefixType = 0;
 
 public Plugin:myinfo = 
 {
@@ -107,6 +109,7 @@ public OnPluginStart()
 	//Konsol Komutları
 	RegConsoleCmd("sm_msc", msc);
 	RegConsoleCmd("sm_menu", zmenu);
+	RegConsoleCmd("sm_test", test);
 	//Zamanlayıcılar
 	CreateTimer(200.0, yazi1, _, TIMER_REPEAT);
 	CreateTimer(220.0, yazi2, _, TIMER_REPEAT);
@@ -204,6 +207,15 @@ public Action:zmenu(client, args)
 	DrawPanelItem(panel, "Kapat");
 	SendPanelToClient(panel, client, panel_HandleMain, 10);
 	CloseHandle(panel);
+}
+public Action:test(client, args)
+{
+	if (g_bOnlyZMaps)
+	{
+		PrintToServer("true");
+	} else {
+		PrintToServer("false");
+	}
 }
 public panel_HandleMain(Handle:menu, MenuAction:action, param1, param2)
 {
@@ -386,8 +398,8 @@ public Action:hazirlik(Handle:timer, any:client)
 			zombi(rastgelezombi()), zombi(rastgelezombi());
 		else if (TakimdakiOyuncular(3) == 0 && TakimdakiOyuncular(2) < 9 && !getrand)
 			zombi(rastgelezombi());
-		else if(TakimdakiOyuncular(3) == 0 && TakimdakiOyuncular(2) > 20 && !getrand)
-		        zombi(rastgelezombi()), zombi(rastgelezombi()), zombi(rastgelezombi());
+		else if (TakimdakiOyuncular(3) == 0 && TakimdakiOyuncular(2) > 20 && !getrand)
+			zombi(rastgelezombi()), zombi(rastgelezombi()), zombi(rastgelezombi());
 	}
 }
 public Action:oyun1(Handle:timer, any:id)
@@ -402,9 +414,9 @@ public Action:oyun1(Handle:timer, any:id)
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Round:%02d:%02d", g_iDalgaSuresi / 60, g_iDalgaSuresi % 60);
 		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "☠Zombiler☠:%d", TakimdakiOyuncular(3));
 		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "İnsanlar:%d", TakimdakiOyuncular(2));
-		if(g_iDalgaSuresi == GetConVarInt(zm_tDalgasuresi) - 3) {
+		if (g_iDalgaSuresi == GetConVarInt(zm_tDalgasuresi) - 3) {
 			setuptime();
-	        }
+		}
 		if (TakimdakiOyuncular(2) == 0) //2 red 3 blue
 		{
 			kazanantakim(3);
@@ -577,22 +589,46 @@ setuptime()
 }
 public Action:Timer_SetTimeSetup(Handle:timer, any:ent1)
 {
-	if(g_iSetupCount > 0) {
+	if (g_iSetupCount > 0) {
 		SetVariantInt(GetConVarInt(zm_tHazirliksuresi));
 		AcceptEntityInput(ent1, "SetTime");
-        }
-	else if(g_iSetupCount < 0) {
+	}
+	else if (g_iSetupCount < 0) {
 		SetVariantInt(GetConVarInt(zm_tDalgasuresi));
 		AcceptEntityInput(ent1, "SetTime");
-        }
+	}
 }
 zombimod()
 {
+	g_iMapPrefixType = 0;
 	decl String:mapv[32];
 	GetCurrentMap(mapv, sizeof(mapv));
-	if (!StrContains(mapv, "zf_", false) || !StrContains(mapv, "szf_", false) || !StrContains(mapv, "zm_", false) || !StrContains(mapv, "zom_", false) || !StrContains(mapv, "zs_", false))
-	{
-		PrintToServer("\n\n\nZombi Haritası tespit edildi!\n\n\n");
+	if (!StrContains(mapv, "zf_", false))
+		g_iMapPrefixType = 1;
+	else if (!StrContains(mapv, "szf_", false))
+		g_iMapPrefixType = 2;
+	else if (!StrContains(mapv, "zm_", false))
+		g_iMapPrefixType = 3;
+	else if (!StrContains(mapv, "zom_", false))
+		g_iMapPrefixType = 4;
+	else if (!StrContains(mapv, "zs_", false))
+		g_iMapPrefixType = 5;
+	
+	if (g_iMapPrefixType == 1)
+		PrintToServer("\n\n\n      Great :) Found Map Prefix == ['ZF']\n\n\n");
+	else if (g_iMapPrefixType == 2)
+		PrintToServer("\n\n\n      Great :) Found Map Prefix == ['SZF']\n\n\n");
+	else if (g_iMapPrefixType == 3)
+		PrintToServer("\n\n\n      Great :) Found Map Prefix == ['ZM']zf\n\n\n");
+	else if (g_iMapPrefixType == 4)
+		PrintToServer("\n\n\n      Great :) Found Map Prefix == ['ZOM']\n\n\n");
+	else if (g_iMapPrefixType == 5)
+		PrintToServer("\n\n\n      Great :) Found Map Prefix ['ZS']\n\n\n");
+	else if(g_iMapPrefixType > 0)
+		g_bOnlyZMaps = true;
+	else if (g_iMapPrefixType == 0) {
+		g_bOnlyZMaps = false;
+		PrintToServer("\n\n           ********WARNING!********     \n\n\n ***Zombie Map Recommended Current[MAP] = [%s]***\n\n\n", mapv);
 	}
 }
 public Action:Timer_SetRoundTime(Handle:timer, any:ent1)
