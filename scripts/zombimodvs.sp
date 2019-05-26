@@ -109,7 +109,6 @@ public OnPluginStart()
 	//Konsol Komutları
 	RegConsoleCmd("sm_msc", msc);
 	RegConsoleCmd("sm_menu", zmenu);
-	RegConsoleCmd("sm_test", test);
 	//Zamanlayıcılar
 	CreateTimer(200.0, yazi1, _, TIMER_REPEAT);
 	CreateTimer(220.0, yazi2, _, TIMER_REPEAT);
@@ -207,15 +206,6 @@ public Action:zmenu(client, args)
 	DrawPanelItem(panel, "Kapat");
 	SendPanelToClient(panel, client, panel_HandleMain, 10);
 	CloseHandle(panel);
-}
-public Action:test(client, args)
-{
-	if (g_bOnlyZMaps)
-	{
-		PrintToServer("true");
-	} else {
-		PrintToServer("false");
-	}
 }
 public panel_HandleMain(Handle:menu, MenuAction:action, param1, param2)
 {
