@@ -29,23 +29,31 @@
 #include <sdkhooks>
 #include <clientprefs>
 
-//Handles
+//ConVars
 new Handle:zm_tDalgasuresi = INVALID_HANDLE;
 new Handle:zm_tHazirliksuresi = INVALID_HANDLE;
 new Handle:zm_hTekvurus = INVALID_HANDLE;
 new Handle:MusicCookie;
+new Handle:zm_hBossZombi = INVALID_HANDLE;
+new Handle:zm_hBossZombiInterval = INVALID_HANDLE;
+//Timer Handles
 new Handle:g_hTimer = INVALID_HANDLE;
 new Handle:g_hSTimer = INVALID_HANDLE;
-//bools
+new Handle:g_hAdvert = INVALID_HANDLE;
+new Handle:g_hAdvert2 = INVALID_HANDLE;
+new Handle:g_hAdvert3 = INVALID_HANDLE;
+new Handle:g_hAdvert4 = INVALID_HANDLE;
+//Global Bools
 new bool:g_bOyun;
 new bool:getrand = false;
 new bool:g_bOnlyZMaps;
-//ints
+//Global Integers
 new g_iSetupCount;
 new g_iDalgaSuresi;
 new bool:g_bKazanan;
 new g_maxHealth[10] =  { 0, 125, 125, 200, 175, 150, 300, 175, 125, 125 };
 new g_iMapPrefixType = 0;
+new g_iChoosen[MAXPLAYERS];
 
 public Plugin:myinfo = 
 {
@@ -70,12 +78,30 @@ public OnMapStart()
 	zombimod();
 	setuptime();
 	ClearTimer(g_hTimer);
+	ClearTimer(g_hSTimer);
+	ClearTimer(g_hAdvert);
+	ClearTimer(g_hAdvert2);
+	ClearTimer(g_hAdvert3);
+	ClearTimer(g_hAdvert4);
 }
 public OnMapEnd()
 {
 	getrand = false;
 	ClearTimer(g_hTimer);
 	ClearTimer(g_hSTimer);
+	ClearTimer(g_hAdvert);
+	ClearTimer(g_hAdvert2);
+	ClearTimer(g_hAdvert3);
+	ClearTimer(g_hAdvert4);
+	UnhookEvent("teamplay_round_start", OnRound);
+	UnhookEvent("player_death", OnPlayerDeath);
+	UnhookEvent("player_spawn", OnSpawn);
+	UnhookEvent("teamplay_setup_finished", OnSetup);
+	UnhookEvent("teamplay_point_captured", OnCaptured, EventHookMode_Post);
+	UnhookEvent("player_hurt", HookPlayerHurt);
+	UnhookEvent("post_inventory_application", Event_Resupply);
+	UnhookEvent("round_end", Event_RoundEnd);
+	UnhookEvent("teamplay_round_win", Event_RoundEnd);
 }
 public OnClientPutInServer(id)
 {
@@ -97,33 +123,26 @@ public Action:ClassSelection(Handle:timer, any:id) {
 public OnConfigsExecuted()
 {
 	for (new i = 1; i <= MaxClients; i++)
-	{
-		if (IsClientInGame(i))
-		{
-			SDKHook(i, SDKHook_GetMaxHealth, OnGetMaxHealth);
-		}
-	}
+	if (IsClientInGame(i))
+		SDKHook(i, SDKHook_GetMaxHealth, OnGetMaxHealth);
 }
 public OnPluginStart()
 {
 	//Konsol Komutları
 	RegConsoleCmd("sm_msc", msc);
 	RegConsoleCmd("sm_menu", zmenu);
-	//Zamanlayıcılar
-	CreateTimer(200.0, yazi1, _, TIMER_REPEAT);
-	CreateTimer(220.0, yazi2, _, TIMER_REPEAT);
-	CreateTimer(120.0, yazi4, _, TIMER_REPEAT);
-	CreateTimer(190.0, yazi3, _, TIMER_REPEAT);
 	//Convarlar
-	zm_tHazirliksuresi = CreateConVar("zm_setup", "60", "Setup suresi/Hazirlik Suresi", FCVAR_NOTIFY);
-	zm_tDalgasuresi = CreateConVar("zm_dalgasuresi", "225", "Setup bittikten sonraki round zamani", FCVAR_NOTIFY);
-	zm_hTekvurus = CreateConVar("zm_tekvurus", "0", "Zombiler tek vurusta insanlari infekte edebilsin (1/0) 0 kapatir.", FCVAR_NOTIFY);
+	zm_tHazirliksuresi = CreateConVar("zm_setup", "60", "Setup suresi/Hazirlik Suresi", FCVAR_NOTIFY, true, 30.0, true, 70.0);
+	zm_tDalgasuresi = CreateConVar("zm_dalgasuresi", "225", "Setup bittikten sonraki round zamani", FCVAR_NOTIFY, true, 120.0, true, 300.0);
+	zm_hTekvurus = CreateConVar("zm_tekvurus", "0", "Zombiler tek vurusta insanlari infekte edebilsin (1/0) 0 kapatir.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	zm_hBossZombi = CreateConVar("zm_bosszombi", "1", "Boss zombi secimi aktif edilsin mi?(0/1)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	zm_hBossZombiInterval = CreateConVar("zm_bossinter", "60", "Boss kacinci saniye gelsin // Formul = Dalga Suresi - Boss Inter (225 - 60 = 165. saniyede)", FCVAR_NOTIFY, true, 60.0, true, 80.0);
 	//Olaylar
-	HookEvent("teamplay_round_start", round);
-	HookEvent("player_death", death);
-	HookEvent("player_spawn", spawn);
-	HookEvent("teamplay_setup_finished", setup);
-	HookEvent("teamplay_point_captured", captured, EventHookMode_Post);
+	HookEvent("teamplay_round_start", OnRound);
+	HookEvent("player_death", OnPlayerDeath);
+	HookEvent("player_spawn", OnSpawn);
+	HookEvent("teamplay_setup_finished", OnSetup);
+	HookEvent("teamplay_point_captured", OnCaptured, EventHookMode_Post);
 	HookEvent("player_hurt", HookPlayerHurt);
 	HookEvent("post_inventory_application", Event_Resupply);
 	HookEvent("round_end", Event_RoundEnd);
@@ -172,23 +191,17 @@ public HookPlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 	new client = GetClientOfUserId(iUserId);
 	new attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
 	new damagebits = GetEventInt(event, "damagebits");
+	
 	if (client > 0 && damagebits & DMG_FALL)
-	{
 		return;
-	}
 	if (client > 0 && GetEventInt(event, "death_flags") & 32)
-	{
 		return;
-	}
 	if (client > 0 && GetConVarInt(zm_hTekvurus) == 1)
-	{
-		if (client != attacker && attacker && TF2_GetPlayerClass(attacker) != TFClass_Scout && GetClientTeam(attacker) != 2 && GetClientTeam(attacker) != 1) //Scoutun topları tek atmamalı.
-		{
-			zombi(client);
-		}
+		if (client != attacker && attacker && TF2_GetPlayerClass(attacker) != TFClass_Scout && GetClientTeam(attacker) != 2 && GetClientTeam(attacker) != 1) {
+		//Damaged.
 	}
 }
-public Action:captured(Handle:event, const String:name[], bool:dontBroadcast)
+public Action:OnCaptured(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new entity = GetClientOfUserId(GetEventInt(event, "userid"));
 	g_bKazanan = true;
@@ -196,61 +209,10 @@ public Action:captured(Handle:event, const String:name[], bool:dontBroadcast)
 	kazanantakim(capT);
 	oyunuresetle(); //Control point capture edildiği zaman resetlenme gerçekleşicek
 }
-public Action:zmenu(client, args)
-{
-	new Handle:panel = CreatePanel();
-	SetPanelTitle(panel, "ZF Esas Menü");
-	DrawPanelItem(panel, "Yardim");
-	DrawPanelItem(panel, "Tercihler");
-	DrawPanelItem(panel, "Yapımcılar");
-	DrawPanelItem(panel, "Kapat");
-	SendPanelToClient(panel, client, panel_HandleMain, 10);
-	CloseHandle(panel);
-}
-public panel_HandleMain(Handle:menu, MenuAction:action, param1, param2)
-{
-	if (action == MenuAction_Select)
-	{
-		switch (param2)
-		{
-			case 1:
-			{
-				Yardim(param1);
-			}
-			case 2:
-			{
-				mzkv2(param1);
-			}
-			case 3:Yapimcilar(param1);
-			default:return;
-		}
-	}
-}
-public mzk(Handle hMuzik, MenuAction action, client, item)
-{
-	if (action == MenuAction_Select)
-	{
-		switch (item)
-		{
-			case 0:
-			{
-				MuzikAc(client);
-				OyuncuMuzikAyari(client, true);
-			}
-			
-			case 1:
-			{
-				MuzikDurdurma(client);
-				OyuncuMuzikAyari(client, false);
-			}
-		}
-	}
-}
 public Action:BlockedCommands(client, const String:command[], argc)
 {
 	return Plugin_Handled;
 }
-
 public Action:BlockedCommandsteam(client, const String:command[], argc)
 {
 	if (ToplamOyuncular() > 0 && client > 0 && g_bOyun && GetClientTeam(client) > 1) //Round başladığı halde oyuncular takım değiştirmeye çalışırsa engellensin
@@ -269,23 +231,12 @@ public Action:hook_JoinClass(client, const String:command[], argc)
 	}
 	return Plugin_Continue; // Eğer öyle bir olay yoksa da plugin çalışmaya devam edicek.
 }
-public Action:setup(Handle:event, const String:name[], bool:dontBroadcast)
+public Action:OnSetup(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	zombimod(); //Round timerin işlemesi için
 	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCHazırlık bitti!");
 }
-//----------------------MENU HANDLE------------------------------------------
-public Action:msc(client, args)
-{
-	Menu hMuzik = new Menu(mzk);
-	hMuzik.SetTitle("Müzik bölmesi");
-	hMuzik.AddItem("Aç", "Aç");
-	hMuzik.AddItem("Kapa", "Kapa");
-	hMuzik.ExitButton = false;
-	hMuzik.Display(client, 20);
-	
-}
-public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
+public Action:OnRound(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	g_bOyun = false; // Setup bitmeden round başlayamaz
 	g_iSetupCount = GetConVarInt(zm_tHazirliksuresi); //Setup zamanlayicisinin convarın değerini alması için
@@ -295,16 +246,28 @@ public Action:round(Handle:event, const String:name[], bool:dontBroadcast)
 	setuptime();
 	ClearTimer(g_hTimer);
 	ClearTimer(g_hSTimer);
+	ClearTimer(g_hAdvert);
+	ClearTimer(g_hAdvert2);
+	ClearTimer(g_hAdvert3);
+	ClearTimer(g_hAdvert4);
 	g_hTimer = CreateTimer(1.0, oyun1, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	g_hSTimer = CreateTimer(1.0, hazirlik, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hAdvert = CreateTimer(200.0, yazi1, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hAdvert2 = CreateTimer(220.0, yazi2, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hAdvert3 = CreateTimer(120.0, yazi4, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	g_hAdvert4 = CreateTimer(190.0, yazi3, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 }
 public Action:Event_RoundEnd(Handle:hEvent, const String:strName[], bool:bDontBroadcast)
 {
 	ClearTimer(g_hTimer);
 	ClearTimer(g_hSTimer);
+	ClearTimer(g_hAdvert);
+	ClearTimer(g_hAdvert2);
+	ClearTimer(g_hAdvert3);
+	ClearTimer(g_hAdvert4);
 	oyunuresetle();
 }
-public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
+public Action:OnSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (TF2_GetClientTeam(client) == TFTeam_Blue)
@@ -324,7 +287,6 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 		}
 	} else {
 		SetEntityRenderColor(client, 255, 255, 255, 0);
-		discizgi();
 		switch (TF2_GetPlayerClass(client))
 		{
 			case TFClass_Spy:
@@ -356,7 +318,7 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 		}
 	}
 }
-public Action:death(Handle:event, const String:name[], bool:dontBroadcast)
+public Action:OnPlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new victim = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (GetEventInt(event, "death_flags") & 32) // Sahte ölüm
@@ -407,6 +369,10 @@ public Action:oyun1(Handle:timer, any:id)
 		if (g_iDalgaSuresi == GetConVarInt(zm_tDalgasuresi) - 3) {
 			setuptime();
 		}
+		else if (g_iDalgaSuresi == GetConVarInt(zm_tDalgasuresi) - GetConVarInt(zm_hBossZombiInterval) && GetConVarInt(zm_hBossZombi) == 1) {
+			bosszombi(bosschoosing());
+			HUD(-1.0, 0.2, 6.0, 255, 0, 0, 2, "\n☠☠☠\nBoss Zombi Geldi:%N\n☠☠☠", g_iChoosen[id]);
+		}
 		if (TakimdakiOyuncular(2) == 0) //2 red 3 blue
 		{
 			kazanantakim(3);
@@ -428,6 +394,10 @@ public Action:oyun1(Handle:timer, any:id)
 	}
 	return Plugin_Handled;
 }
+
+
+
+//Zombie Choosing Core
 stock rastgelezombi()
 {
 	new oyuncular[MaxClients + 1], num;
@@ -439,6 +409,27 @@ stock rastgelezombi()
 		}
 	}
 	return (num == 0) ? 0 : oyuncular[GetRandomInt(0, num - 1)];
+}
+stock bosschoosing()
+{
+	new num;
+	for (new i = 1; i <= MaxClients; i++) {
+		if (IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) == 3 && g_bOyun) {
+			g_iChoosen[num++] = i;
+		}
+	}
+	return (num == 0) ? 0 : g_iChoosen[GetRandomInt(0, num - 1)];
+}
+bosszombi(client)
+{
+	if (client > 0 && IsClientInGame(client) && IsPlayerAlive(client) && GetClientTeam(client) == 3) {
+		client = g_iChoosen[client];
+		TF2_SetPlayerClass(g_iChoosen[client], TFClass_Heavy);
+		TF2_RespawnPlayer(g_iChoosen[client]);
+		SetEntPropFloat(g_iChoosen[client], Prop_Send, "m_flModelScale", 1.5);
+		SetEntProp(g_iChoosen[client], Prop_Send, "m_bGlowEnabled", 1);
+		SetEntityRenderColor(g_iChoosen[client], 255, 0, 0, 0);
+	}
 }
 zombi(client)
 {
@@ -472,6 +463,10 @@ public Action:silah(Handle:timer, any:client)
 		}
 	}
 }
+//------
+
+
+
 TakimdakiOyuncular(iTakim)
 {
 	new iSayi;
@@ -522,24 +517,6 @@ HUD(Float:x, Float:y, Float:Sure, r, g, b, kanal, const String:message[], any:..
 		}
 	}
 }
-//Adverts
-public Action:yazi1(Handle:timer, any:id)
-{
-	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCHazırlık süresi 30(varsayılan) saniyedir.");
-}
-public Action:yazi2(Handle:timer, any:id)
-{
-	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCHayatta kalmaya çalışın!");
-}
-public Action:yazi3(Handle:timer, any:id)
-{
-	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun içi müzikleri açmak veya kapatmak için [!msc] yazabilirsiniz.");
-}
-public Action:yazi4(Handle:timer, any:id)
-{
-	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun hakkında bilgi için [!menu] yazabilirsiniz.");
-}
-
 public Action:OnTakeDamage(victim, &attacker, &inflictor, &Float:damage, &damagetype)
 {
 	if (!IsValidClient(attacker))
@@ -614,7 +591,7 @@ zombimod()
 		PrintToServer("\n\n\n      Great :) Found Map Prefix == ['ZOM']\n\n\n");
 	else if (g_iMapPrefixType == 5)
 		PrintToServer("\n\n\n      Great :) Found Map Prefix ['ZS']\n\n\n");
-	else if(g_iMapPrefixType > 0)
+	else if (g_iMapPrefixType > 0)
 		g_bOnlyZMaps = true;
 	else if (g_iMapPrefixType == 0) {
 		g_bOnlyZMaps = false;
@@ -648,6 +625,122 @@ public Action:res(Handle:timer, any:id)
 		}
 	}
 }
+stock bool:IsValidClient(client, bool:nobots = true)
+{
+	if (client <= 0 || client > MaxClients || !IsClientConnected(client) || (nobots && IsFakeClient(client)))
+	{
+		return false;
+	}
+	return IsClientInGame(client);
+}
+ClientWeapon(client)
+{
+	return GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
+}
+sinifsayisi(siniff)
+{
+	new iSinifNum;
+	for (new i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && TF2_GetPlayerClass(i) == siniff && TF2_GetClientTeam(i) == TFTeam_Red)
+		{
+			iSinifNum++;
+		}
+	}
+	return iSinifNum;
+}
+izleyicikontrolu()
+{
+	for (new i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && TF2_GetClientTeam(i) == TFTeam_Spectator && g_bOyun)
+		{
+			ChangeClientTeam(i, 3);
+			TF2_SetPlayerClass(i, TFClass_Scout);
+			TF2_RespawnPlayer(i);
+		}
+	}
+}
+public Action:TF2_CalcIsAttackCritical(id, weapon, String:weaponname[], &bool:result)
+{
+	if (StrEqual(weaponname, "tf_weapon_compound_bow", false) || StrEqual(weaponname, "tf_weapon_fists", false) || StrEqual(weaponname, "tf_weapon_crossbow", false))
+	{
+		result = true;
+		return Plugin_Changed;
+	}
+	return Plugin_Continue;
+}
+stock ClearTimer(&Handle:hTimer)
+{
+	if (hTimer != INVALID_HANDLE)
+	{
+		KillTimer(hTimer);
+		hTimer = INVALID_HANDLE;
+	}
+}
+
+
+// Menu Section
+public Action:zmenu(client, args)
+{
+	new Handle:panel = CreatePanel();
+	SetPanelTitle(panel, "ZF Esas Menü");
+	DrawPanelItem(panel, "Yardim");
+	DrawPanelItem(panel, "Tercihler");
+	DrawPanelItem(panel, "Yapımcılar");
+	DrawPanelItem(panel, "Kapat");
+	SendPanelToClient(panel, client, panel_HandleMain, 10);
+	CloseHandle(panel);
+}
+public panel_HandleMain(Handle:menu, MenuAction:action, param1, param2)
+{
+	if (action == MenuAction_Select)
+	{
+		switch (param2)
+		{
+			case 1:
+			{
+				Yardim(param1);
+			}
+			case 2:
+			{
+				mzkv2(param1);
+			}
+			case 3:Yapimcilar(param1);
+			default:return;
+		}
+	}
+}
+public mzk(Handle hMuzik, MenuAction action, client, item)
+{
+	if (action == MenuAction_Select)
+	{
+		switch (item)
+		{
+			case 0:
+			{
+				MuzikAc(client);
+				OyuncuMuzikAyari(client, true);
+			}
+			
+			case 1:
+			{
+				MuzikDurdurma(client);
+				OyuncuMuzikAyari(client, false);
+			}
+		}
+	}
+}
+public Action:msc(client, args)
+{
+	Menu hMuzik = new Menu(mzk);
+	hMuzik.SetTitle("Müzik bölmesi");
+	hMuzik.AddItem("Aç", "Aç");
+	hMuzik.AddItem("Kapa", "Kapa");
+	hMuzik.ExitButton = false;
+	hMuzik.Display(client, 20);
+	
+}
 MuzikDurdurma(client)
 {
 	PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCMüzikler durduruldu.");
@@ -656,7 +749,6 @@ MuzikAc(client)
 {
 	PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCMüzikler açıldı.");
 }
-
 OyuncuMuzikAyari(client, bool:acik)
 {
 	new String:strCookie[32];
@@ -671,28 +763,6 @@ OyuncuMuzikAyari(client, bool:acik)
 		}
 	}
 	return bool:StringToInt(strCookie);
-}
-stock bool:IsValidClient(client, bool:nobots = true)
-{
-	if (client <= 0 || client > MaxClients || !IsClientConnected(client) || (nobots && IsFakeClient(client)))
-	{
-		return false;
-	}
-	return IsClientInGame(client);
-}
-
-ClientWeapon(client)
-{
-	return GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
-}
-Yardim(client)
-{
-	Menu hYardim = new Menu(yrd);
-	hYardim.SetTitle("ZF Yardım Bölmesi(bilgi)");
-	hYardim.AddItem("ZF Hakkında", "ZF Hakkında");
-	hYardim.AddItem("Kapat", "Kapat");
-	hYardim.ExitButton = false;
-	hYardim.Display(client, 20);
 }
 public yrd(Handle hYardim, MenuAction action, client, item)
 {
@@ -786,18 +856,36 @@ public panel_HandleMuzik(Handle:menu, MenuAction:action, param1, param2)
 		}
 	}
 }
-sinifsayisi(siniff)
+Yardim(client)
 {
-	new iSinifNum;
-	for (new i = 1; i <= MaxClients; i++)
-	{
-		if (IsClientInGame(i) && TF2_GetPlayerClass(i) == siniff && TF2_GetClientTeam(i) == TFTeam_Red)
-		{
-			iSinifNum++;
-		}
-	}
-	return iSinifNum;
+	Menu hYardim = new Menu(yrd);
+	hYardim.SetTitle("ZF Yardım Bölmesi(bilgi)");
+	hYardim.AddItem("ZF Hakkında", "ZF Hakkında");
+	hYardim.AddItem("Kapat", "Kapat");
+	hYardim.ExitButton = false;
+	hYardim.Display(client, 20);
 }
+
+
+//Adverts Section
+public Action:yazi1(Handle:timer, any:id)
+{
+	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCHazırlık süresi 30(varsayılan) saniyedir.");
+}
+public Action:yazi2(Handle:timer, any:id)
+{
+	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCHayatta kalmaya çalışın!");
+}
+public Action:yazi3(Handle:timer, any:id)
+{
+	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun içi müzikleri açmak veya kapatmak için [!msc] yazabilirsiniz.");
+}
+public Action:yazi4(Handle:timer, any:id)
+{
+	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun hakkında bilgi için [!menu] yazabilirsiniz.");
+}
+///////
+/*
 discizgi()
 {
 	new oyuncu[MaxClients + 1], num;
@@ -810,32 +898,4 @@ discizgi()
 		}
 	}
 }
-izleyicikontrolu()
-{
-	for (new i = 1; i <= MaxClients; i++)
-	{
-		if (IsClientInGame(i) && TF2_GetClientTeam(i) == TFTeam_Spectator && g_bOyun)
-		{
-			ChangeClientTeam(i, 3);
-			TF2_SetPlayerClass(i, TFClass_Scout);
-			TF2_RespawnPlayer(i);
-		}
-	}
-}
-public Action:TF2_CalcIsAttackCritical(id, weapon, String:weaponname[], &bool:result)
-{
-	if (StrEqual(weaponname, "tf_weapon_compound_bow", false) || StrEqual(weaponname, "tf_weapon_fists", false) || StrEqual(weaponname, "tf_weapon_crossbow", false))
-	{
-		result = true;
-		return Plugin_Changed;
-	}
-	return Plugin_Continue;
-}
-stock ClearTimer(&Handle:hTimer)
-{
-	if (hTimer != INVALID_HANDLE)
-	{
-		KillTimer(hTimer);
-		hTimer = INVALID_HANDLE;
-	}
-} 
+*/
