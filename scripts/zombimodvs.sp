@@ -93,15 +93,15 @@ public OnMapEnd()
 	ClearTimer(g_hAdvert2);
 	ClearTimer(g_hAdvert3);
 	ClearTimer(g_hAdvert4);
-	UnhookEvent("teamplay_round_start", OnRound);
-	UnhookEvent("player_death", OnPlayerDeath);
-	UnhookEvent("player_spawn", OnSpawn);
-	UnhookEvent("teamplay_setup_finished", OnSetup);
-	UnhookEvent("teamplay_point_captured", OnCaptured, EventHookMode_Post);
-	UnhookEvent("player_hurt", HookPlayerHurt);
-	UnhookEvent("post_inventory_application", Event_Resupply);
-	UnhookEvent("round_end", Event_RoundEnd);
-	UnhookEvent("teamplay_round_win", Event_RoundEnd);
+	//UnhookEvent("teamplay_round_start", OnRound);
+	//UnhookEvent("player_death", OnPlayerDeath);
+	//UnhookEvent("player_spawn", OnSpawn);
+	//UnhookEvent("teamplay_setup_finished", OnSetup);
+	//UnhookEvent("teamplay_point_captured", OnCaptured, EventHookMode_Post);
+	//UnhookEvent("player_hurt", HookPlayerHurt);
+	//UnhookEvent("post_inventory_application", Event_Resupply);
+	//UnhookEvent("round_end", Event_RoundEnd);
+	//UnhookEvent("teamplay_round_win", Event_RoundEnd);
 }
 public OnClientPutInServer(id)
 {
@@ -123,8 +123,8 @@ public Action:ClassSelection(Handle:timer, any:id) {
 public OnConfigsExecuted()
 {
 	for (new i = 1; i <= MaxClients; i++)
-	if (IsClientInGame(i))
-		SDKHook(i, SDKHook_GetMaxHealth, OnGetMaxHealth);
+	        if (IsClientInGame(i))
+	                SDKHook(i, SDKHook_GetMaxHealth, OnGetMaxHealth);
 }
 public OnPluginStart()
 {
