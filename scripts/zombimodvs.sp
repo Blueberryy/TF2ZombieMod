@@ -36,6 +36,8 @@ new Handle:zm_hTekvurus = INVALID_HANDLE;
 new Handle:MusicCookie;
 new Handle:zm_hBossZombi = INVALID_HANDLE;
 new Handle:zm_hBossZombiInterval = INVALID_HANDLE;
+new Handle:zm_enable = INVALID_HANDLE;
+new Handle:zm_hOnlyZMaps = INVALID_HANDLE;
 //Timer Handles
 new Handle:g_hTimer = INVALID_HANDLE;
 new Handle:g_hSTimer = INVALID_HANDLE;
@@ -47,6 +49,7 @@ new Handle:g_hAdvert4 = INVALID_HANDLE;
 new bool:g_bOyun;
 new bool:getrand = false;
 new bool:g_bOnlyZMaps;
+new bool:g_bEnabled;
 //Global Integers
 new g_iSetupCount;
 new g_iDalgaSuresi;
@@ -54,6 +57,8 @@ new bool:g_bKazanan;
 new g_maxHealth[10] =  { 0, 125, 125, 200, 175, 150, 300, 175, 125, 125 };
 new g_iMapPrefixType = 0;
 new g_iChoosen[MAXPLAYERS];
+//KvStrings
+static String:KvValue[PLATFORM_MAX_PATH]; //For Next Update
 
 public Plugin:myinfo = 
 {
@@ -77,12 +82,40 @@ public OnMapStart()
 {
 	zombimod();
 	setuptime();
+	ZmEnableDisable();
 	ClearTimer(g_hTimer);
 	ClearTimer(g_hSTimer);
 	ClearTimer(g_hAdvert);
 	ClearTimer(g_hAdvert2);
 	ClearTimer(g_hAdvert3);
 	ClearTimer(g_hAdvert4);
+	if (GetConVarInt(zm_hOnlyZMaps) == 1)
+		if (g_iMapPrefixType == 0) {
+		PrintToServer("\n\n[ZM]Sadece zombi maplerinde calismaya ayarlandı bu sebebple mod kapatildi.\n\n    \n\nTekrar Acmak icin:zm_onlyzm 0 yazabilirsiniz\n\n");
+		UnhookEvent("teamplay_round_start", OnRound);
+		UnhookEvent("player_death", OnPlayerDeath);
+		UnhookEvent("player_spawn", OnSpawn);
+		UnhookEvent("teamplay_setup_finished", OnSetup);
+		UnhookEvent("teamplay_point_captured", OnCaptured, EventHookMode_Post);
+		UnhookEvent("player_hurt", HookPlayerHurt);
+		UnhookEvent("post_inventory_application", Event_Resupply);
+		UnhookEvent("round_end", Event_RoundEnd);
+		UnhookEvent("teamplay_round_win", Event_RoundEnd);
+	        }
+	else if (GetConVarInt(zm_hOnlyZMaps) == 0)
+		return;
+	if (!g_bEnabled) {
+		PrintToServer("\n[ZM]Disabled\n");
+		UnhookEvent("teamplay_round_start", OnRound);
+		UnhookEvent("player_death", OnPlayerDeath);
+		UnhookEvent("player_spawn", OnSpawn);
+		UnhookEvent("teamplay_setup_finished", OnSetup);
+		UnhookEvent("teamplay_point_captured", OnCaptured, EventHookMode_Post);
+		UnhookEvent("player_hurt", HookPlayerHurt);
+		UnhookEvent("post_inventory_application", Event_Resupply);
+		UnhookEvent("round_end", Event_RoundEnd);
+		UnhookEvent("teamplay_round_win", Event_RoundEnd);
+	}
 }
 public OnMapEnd()
 {
@@ -93,15 +126,6 @@ public OnMapEnd()
 	ClearTimer(g_hAdvert2);
 	ClearTimer(g_hAdvert3);
 	ClearTimer(g_hAdvert4);
-	//UnhookEvent("teamplay_round_start", OnRound);
-	//UnhookEvent("player_death", OnPlayerDeath);
-	//UnhookEvent("player_spawn", OnSpawn);
-	//UnhookEvent("teamplay_setup_finished", OnSetup);
-	//UnhookEvent("teamplay_point_captured", OnCaptured, EventHookMode_Post);
-	//UnhookEvent("player_hurt", HookPlayerHurt);
-	//UnhookEvent("post_inventory_application", Event_Resupply);
-	//UnhookEvent("round_end", Event_RoundEnd);
-	//UnhookEvent("teamplay_round_win", Event_RoundEnd);
 }
 public OnClientPutInServer(id)
 {
@@ -123,8 +147,8 @@ public Action:ClassSelection(Handle:timer, any:id) {
 public OnConfigsExecuted()
 {
 	for (new i = 1; i <= MaxClients; i++)
-	        if (IsClientInGame(i))
-	                SDKHook(i, SDKHook_GetMaxHealth, OnGetMaxHealth);
+	if (IsClientInGame(i))
+		SDKHook(i, SDKHook_GetMaxHealth, OnGetMaxHealth);
 }
 public OnPluginStart()
 {
@@ -137,6 +161,8 @@ public OnPluginStart()
 	zm_hTekvurus = CreateConVar("zm_tekvurus", "0", "Zombiler tek vurusta insanlari infekte edebilsin (1/0) 0 kapatir.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	zm_hBossZombi = CreateConVar("zm_bosszombi", "1", "Boss zombi secimi aktif edilsin mi?(0/1)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	zm_hBossZombiInterval = CreateConVar("zm_bossinter", "60", "Boss kacinci saniye gelsin // Formul = Dalga Suresi - Boss Inter (225 - 60 = 165. saniyede)", FCVAR_NOTIFY, true, 60.0, true, 80.0);
+	zm_enable = CreateConVar("zm_enable", "1", "Zombi Modu Acilsin? Not:Birdahaki map degisiminde etkin olur. (0/1)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	zm_hOnlyZMaps = CreateConVar("zm_onlyzm", "1", "Zombi Modu sadece zombi haritalarinda olsun? (0/1)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	//Olaylar
 	HookEvent("teamplay_round_start", OnRound);
 	HookEvent("player_death", OnPlayerDeath);
@@ -163,6 +189,9 @@ public OnPluginStart()
 	AddCommandListener(hook_JoinClass, "joinclass");
 	AddCommandListener(BlockedCommands, "autoteam");
 	AddCommandListener(BlockedCommandsteam, "jointeam");
+	//Directories
+	//CreateDirectory("/addons/sourcemod/data/zombiprops", 0, false, NULL_STRING);
+	//BuildPath(Path_SM, KvValue, sizeof(KvValue), "data/zombiprops/props.txt");
 }
 public Action:OnGetMaxHealth(client, &maxhealth)
 {
@@ -678,9 +707,19 @@ stock ClearTimer(&Handle:hTimer)
 		hTimer = INVALID_HANDLE;
 	}
 }
+ZmEnableDisable() {
+	if (GetConVarInt(zm_enable) == 1)
+		g_bEnabled = true;
+	else if (GetConVarInt(zm_enable) == 0)
+		g_bEnabled = false;
+}
 
 
-// Menu Section
+
+/* // ------------------------------                                            ------------------------------
+         ------------------------------ M E N U    S E C T I O N ------------------------------
+         ------------------------------                                            ------------------------------
+ */
 public Action:zmenu(client, args)
 {
 	new Handle:panel = CreatePanel();
@@ -865,9 +904,20 @@ Yardim(client)
 	hYardim.ExitButton = false;
 	hYardim.Display(client, 20);
 }
+/* // ------------------------------                                            ------------------------------
+         ------------------------------ M E N U    S E C T I O N ------------------------------
+         ------------------------------                                            ------------------------------
+*/
 
 
-//Adverts Section
+
+
+
+
+/* // ------------------------------                                            ------------------------------
+         ------------------------------ A D V E R T    S E C T I O N ------------------------------
+         ------------------------------                                            ------------------------------
+ */
 public Action:yazi1(Handle:timer, any:id)
 {
 	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCHazırlık süresi 30(varsayılan) saniyedir.");
@@ -884,18 +934,7 @@ public Action:yazi4(Handle:timer, any:id)
 {
 	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun hakkında bilgi için [!menu] yazabilirsiniz.");
 }
-///////
-/*
-discizgi()
-{
-	new oyuncu[MaxClients + 1], num;
-	for (new i = 1; i <= MaxClients; i++)
-	{
-		if (IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) == 2)
-		{
-			oyuncu[num++] = i;
-			SetEntProp(i, Prop_Send, "m_bGlowEnabled", 1);
-		}
-	}
-}
-*/
+/* // ------------------------------                                            ------------------------------
+         ------------------------------ A D V E R T    S E C T I O N ------------------------------
+         ------------------------------                                            ------------------------------
+ */
