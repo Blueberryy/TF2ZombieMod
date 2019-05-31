@@ -139,15 +139,19 @@ public OnClientPutInServer(id)
 }
 public Action:ClassSelection(Handle:timer, any:id) {
 	if (id > 0 && IsClientInGame(id) && ToplamOyuncular() > 0) {
-		ShowVGUIPanel(id, GetClientTeam(id) == TFTeam_Blue ? "class_blue" : "class_red");
+		if(g_bEnabled) {
+			ShowVGUIPanel(id, GetClientTeam(id) == TFTeam_Blue ? "class_blue" : "class_red");
+	        }
 	} else {
-		PrintToChat(id, "Lütfen [,] e basın!");
+		if(g_bEnabled) {
+			PrintToChat(id, "Lütfen [,] e basın!");
+	        }
 	}
 }
 public OnConfigsExecuted()
 {
 	for (new i = 1; i <= MaxClients; i++)
-	if (IsClientInGame(i))
+	if (IsClientInGame(i) && g_bEnabled)
 		SDKHook(i, SDKHook_GetMaxHealth, OnGetMaxHealth);
 }
 public OnPluginStart()
@@ -244,7 +248,7 @@ public Action:BlockedCommands(client, const String:command[], argc)
 }
 public Action:BlockedCommandsteam(client, const String:command[], argc)
 {
-	if (ToplamOyuncular() > 0 && client > 0 && g_bOyun && GetClientTeam(client) > 1) //Round başladığı halde oyuncular takım değiştirmeye çalışırsa engellensin
+	if (g_bEnabled && ToplamOyuncular() > 0 && client > 0 && g_bOyun && GetClientTeam(client) > 1) //Round başladığı halde oyuncular takım değiştirmeye çalışırsa engellensin
 	{
 		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun esnasında ya da setup zamanında takım değiştirilemez!");
 		return Plugin_Handled; // Engellemeyi uygula
@@ -253,7 +257,7 @@ public Action:BlockedCommandsteam(client, const String:command[], argc)
 }
 public Action:hook_JoinClass(client, const String:command[], argc)
 {
-	if (client > 0 && client <= MaxClients && g_bOyun && GetClientTeam(client) == 2) //Round başladığı halde oyuncular takım değiştirmeye çalışırsa engellensin
+	if (g_bEnabled && client > 0 && client <= MaxClients && g_bOyun && GetClientTeam(client) == 2) //Round başladığı halde oyuncular takım değiştirmeye çalışırsa engellensin
 	{
 		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun esnasında sınıf değiştiremezsiniz!");
 		return Plugin_Handled; // Engellemeyi uygula
