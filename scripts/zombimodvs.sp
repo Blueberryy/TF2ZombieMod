@@ -38,6 +38,9 @@ new Handle:zm_hBossZombi = INVALID_HANDLE;
 new Handle:zm_hBossZombiInterval = INVALID_HANDLE;
 new Handle:zm_enable = INVALID_HANDLE;
 new Handle:zm_hOnlyZMaps = INVALID_HANDLE;
+new Handle:zm_HealthRegenEnable = INVALID_HANDLE;
+new Handle:zm_HealthRegenMiktar = INVALID_HANDLE;
+new Handle:zm_HealthRegenTick = INVALID_HANDLE;
 //Timer Handles
 new Handle:g_hTimer = INVALID_HANDLE;
 new Handle:g_hSTimer = INVALID_HANDLE;
@@ -57,8 +60,10 @@ new bool:g_bKazanan;
 new g_maxHealth[10] =  { 0, 125, 125, 200, 175, 150, 300, 175, 125, 125 };
 new g_iMapPrefixType = 0;
 new g_iChoosen[MAXPLAYERS];
+new clientRegenTime[MAXPLAYERS + 1];
+new MaxHealth[MAXPLAYERS + 1];
 //KvStrings
-static String:KvValue[PLATFORM_MAX_PATH]; //For Next Update
+//static String:KvValue[PLATFORM_MAX_PATH]; //For Next Update
 
 public Plugin:myinfo = 
 {
@@ -82,28 +87,35 @@ public OnMapStart()
 {
 	zombimod();
 	setuptime();
-	ZmEnableDisable();
 	ClearTimer(g_hTimer);
 	ClearTimer(g_hSTimer);
 	ClearTimer(g_hAdvert);
 	ClearTimer(g_hAdvert2);
 	ClearTimer(g_hAdvert3);
 	ClearTimer(g_hAdvert4);
-	if (GetConVarInt(zm_hOnlyZMaps) == 1)
+	KillClientTimer(_, true);
+	if (GetConVarInt(zm_hOnlyZMaps) == 1) {
 		if (g_iMapPrefixType == 0) {
-		PrintToServer("\n\n[ZM]Sadece zombi maplerinde calismaya ayarlandı bu sebebple mod kapatildi.\n\n    \n\nTekrar Acmak icin:zm_onlyzm 0 yazabilirsiniz\n\n");
-		UnhookEvent("teamplay_round_start", OnRound);
-		UnhookEvent("player_death", OnPlayerDeath);
-		UnhookEvent("player_spawn", OnSpawn);
-		UnhookEvent("teamplay_setup_finished", OnSetup);
-		UnhookEvent("teamplay_point_captured", OnCaptured, EventHookMode_Post);
-		UnhookEvent("player_hurt", HookPlayerHurt);
-		UnhookEvent("post_inventory_application", Event_Resupply);
-		UnhookEvent("round_end", Event_RoundEnd);
-		UnhookEvent("teamplay_round_win", Event_RoundEnd);
-	        }
-	else if (GetConVarInt(zm_hOnlyZMaps) == 0)
-		return;
+			PrintToServer("\n\n[ZM]Sadece zombi maplerinde calismaya ayarlandı bu sebebple mod kapatildi.\n\n    \n\nTekrar Acmak icin:zm_onlyzm 0 yazabilirsiniz\n\n");
+			g_bEnabled = false;
+		}
+		else if (g_iMapPrefixType > 0) {
+			g_bEnabled = true;
+		}
+	}
+	else if (GetConVarInt(zm_hOnlyZMaps) == 0) {
+		g_bEnabled = true;
+		if (g_iMapPrefixType > 0) {
+			g_bEnabled = true;
+		}
+	}
+	
+	if (GetConVarInt(zm_enable) == 0) {
+		g_bEnabled = false;
+	}
+	else if (GetConVarInt(zm_enable) == 1) {
+		g_bEnabled = true;
+	}
 	if (!g_bEnabled) {
 		PrintToServer("\n[ZM]Disabled\n");
 		UnhookEvent("teamplay_round_start", OnRound);
@@ -126,27 +138,31 @@ public OnMapEnd()
 	ClearTimer(g_hAdvert2);
 	ClearTimer(g_hAdvert3);
 	ClearTimer(g_hAdvert4);
+	KillClientTimer(_, true);
 }
 public OnClientPutInServer(id)
 {
 	SDKHook(id, SDKHook_OnTakeDamage, OnTakeDamage);
-	SDKHook(id, SDKHook_GetMaxHealth, OnGetMaxHealth);
+	if (g_bEnabled) {
+		SDKHook(id, SDKHook_GetMaxHealth, OnGetMaxHealth);
+	}
 	if (id > 0 && IsValidClient(id) && IsClientInGame(id) && g_bOyun && TakimdakiOyuncular(3) > 0)
 	{
 		ChangeClientTeam(id, 3);
 		CreateTimer(1.0, ClassSelection, id, TIMER_FLAG_NO_MAPCHANGE);
 	}
 }
+public OnClientDisconnect(client) {
+	if (clientRegenTime[client] != INVALID_HANDLE)
+		KillClientTimer(client);
+}
 public Action:ClassSelection(Handle:timer, any:id) {
-	if (id > 0 && IsClientInGame(id) && ToplamOyuncular() > 0) {
-		if(g_bEnabled) {
-			ShowVGUIPanel(id, GetClientTeam(id) == TFTeam_Blue ? "class_blue" : "class_red");
-	        }
-	} else {
-		if(g_bEnabled) {
-			PrintToChat(id, "Lütfen [,] e basın!");
-	        }
-	}
+	if (id > 0 && IsClientInGame(id) && ToplamOyuncular() > 0)
+		if (g_bEnabled)
+		ShowVGUIPanel(id, TF2_GetClientTeam(id) == TFTeam_Blue ? "class_blue" : "class_red");
+	else
+		if (g_bEnabled)
+		PrintToChat(id, "Lütfen [,] e basın!");
 }
 public OnConfigsExecuted()
 {
@@ -160,13 +176,17 @@ public OnPluginStart()
 	RegConsoleCmd("sm_msc", msc);
 	RegConsoleCmd("sm_menu", zmenu);
 	//Convarlar
-	zm_tHazirliksuresi = CreateConVar("zm_setup", "60", "Setup suresi/Hazirlik Suresi", FCVAR_NOTIFY, true, 30.0, true, 70.0);
+	zm_tHazirliksuresi = CreateConVar("zm_setup", "30", "Setup suresi/Hazirlik Suresi", FCVAR_NOTIFY, true, 30.0, true, 70.0);
 	zm_tDalgasuresi = CreateConVar("zm_dalgasuresi", "225", "Setup bittikten sonraki round zamani", FCVAR_NOTIFY, true, 120.0, true, 300.0);
 	zm_hTekvurus = CreateConVar("zm_tekvurus", "0", "Zombiler tek vurusta insanlari infekte edebilsin (1/0) 0 kapatir.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	zm_hBossZombi = CreateConVar("zm_bosszombi", "1", "Boss zombi secimi aktif edilsin mi?(0/1)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	zm_hBossZombiInterval = CreateConVar("zm_bossinter", "60", "Boss kacinci saniye gelsin // Formul = Dalga Suresi - Boss Inter (225 - 60 = 165. saniyede)", FCVAR_NOTIFY, true, 60.0, true, 80.0);
+	zm_hBossZombiInterval = CreateConVar("zm_bossinter", "20", "Boss kacinci saniye gelsin // Formul = Dalga Suresi - Boss Inter (225 - 60 = 165. saniyede)", FCVAR_NOTIFY, true, 20.0, true, 80.0);
 	zm_enable = CreateConVar("zm_enable", "1", "Zombi Modu Acilsin? Not:Birdahaki map degisiminde etkin olur. (0/1)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	zm_hOnlyZMaps = CreateConVar("zm_onlyzm", "1", "Zombi Modu sadece zombi haritalarinda olsun? (0/1)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	zm_HealthRegenEnable = CreateConVar("zm_healthregen", "1", "Health Regen olsun mu? Zombiler hasar yediginde(0/1)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	zm_HealthRegenMiktar = CreateConVar("zm_hrmiktar", "20", "Her belirlenen saniyede kaç HP artsın? (Zombilerin)", FCVAR_NOTIFY, true, 10.0, true, 30.0);
+	zm_HealthRegenTick = CreateConVar("zm_hrtick", "3", "Kaç saniyede bir canı artsın?(Zombilerin)", FCVAR_NOTIFY, true, 3.0, true, 7.0);
+	
 	//Olaylar
 	HookEvent("teamplay_round_start", OnRound);
 	HookEvent("player_death", OnPlayerDeath);
@@ -183,7 +203,7 @@ public OnPluginStart()
 	ServerCommand("mp_teams_unbalance_limit 0");
 	ServerCommand("mp_respawnwavetime 0 ");
 	ServerCommand("mp_disable_respawn_times 1 ");
-	ServerCommand("sm_cvar mp_waitingforplayers_time 25");
+	//ServerCommand("sm_cvar mp_waitingforplayers_time 25");
 	ServerCommand("sm_cvar tf_spy_invis_time 0.5"); // Locked 
 	ServerCommand("sm_cvar tf_spy_invis_unstealth_time 0.75"); // Locked 
 	ServerCommand("sm_cvar tf_spy_cloak_no_attack_time 1.0");
@@ -204,6 +224,7 @@ public Action:OnGetMaxHealth(client, &maxhealth)
 		if (TF2_GetClientTeam(client) == TFTeam_Blue)
 		{
 			maxhealth = g_maxHealth[TF2_GetPlayerClass(client)] * 2;
+			MaxHealth[client] = maxhealth;
 			return Plugin_Handled;
 		}
 	}
@@ -231,8 +252,60 @@ public HookPlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 		return;
 	if (client > 0 && GetConVarInt(zm_hTekvurus) == 1)
 		if (client != attacker && attacker && TF2_GetPlayerClass(attacker) != TFClass_Scout && GetClientTeam(attacker) != 2 && GetClientTeam(attacker) != 1) {
-		//Damaged.
+			zombi(client);
 	}
+	if (GetConVarInt(zm_HealthRegenEnable) == 1 && client > 0 && !g_iChoosen[client] && clientRegenTime[client] == INVALID_HANDLE && GetClientTeam(client) == 3) {
+		clientRegenTime[client] = CreateTimer(GetConVarFloat(zm_HealthRegenTick), RegenTick, client, TIMER_REPEAT);
+	}
+}
+public Action:RegenTick(Handle:timer, any:client)
+{
+	new clientCurHealth = GetPlayerHealth(client);
+	//new Float:size = GetEntPropFloat(client, Prop_Data, "m_flModelScale");
+	if (!g_iChoosen[client]) {
+		if (GetClientTeam(client) == 3 && clientCurHealth < MaxHealth[client]) {
+			SetPlayerHealth(client, clientCurHealth + GetConVarInt(zm_HealthRegenMiktar));
+		}
+		else if (GetClientTeam(client) == 3 && clientCurHealth > MaxHealth[client]) {
+			SetPlayerHealth(client, MaxHealth[client]);
+			KillClientTimer(client);
+		}
+	}
+}
+SetPlayerHealth(entity, amount, bool:maxHealth = false, bool:ResetMax = false)
+{
+	if (maxHealth)
+		if (ResetMax)
+		SetEntData(entity, FindDataMapInfo(entity, "m_iMaxHealth"), MaxHealth[entity], 4, true);
+	else
+		SetEntData(entity, FindDataMapInfo(entity, "m_iMaxHealth"), amount, 4, true);
+	
+	SetEntityHealth(entity, amount);
+}
+GetPlayerHealth(entity, bool:maxHealth = false)
+{
+	if (maxHealth)
+	{
+		return GetEntData(entity, FindDataMapInfo(entity, "m_iMaxHealth"));
+	}
+	return GetEntData(entity, FindDataMapInfo(entity, "m_iHealth"));
+}
+KillClientTimer(client = 0, bool:all = false)
+{
+	if (all)
+	{
+		for (new i; i <= MAXPLAYERS; i++)
+		{
+			if (clientRegenTime[i] != INVALID_HANDLE)
+			{
+				KillTimer(clientRegenTime[client]);
+				clientRegenTime[client] = INVALID_HANDLE;
+			}
+		}
+		return;
+	}
+	KillTimer(clientRegenTime[client]);
+	clientRegenTime[client] = INVALID_HANDLE;
 }
 public Action:OnCaptured(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -317,6 +390,9 @@ public Action:OnSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 		{
 			SetEntityRenderColor(client, 0, 255, 0, 0);
 			zombi(client);
+			if (clientRegenTime[client] != INVALID_HANDLE) {
+				KillClientTimer(client);
+			}
 		}
 	} else {
 		SetEntityRenderColor(client, 255, 255, 255, 0);
@@ -711,12 +787,7 @@ stock ClearTimer(&Handle:hTimer)
 		hTimer = INVALID_HANDLE;
 	}
 }
-ZmEnableDisable() {
-	if (GetConVarInt(zm_enable) == 1)
-		g_bEnabled = true;
-	else if (GetConVarInt(zm_enable) == 0)
-		g_bEnabled = false;
-}
+
 
 
 
@@ -908,9 +979,9 @@ Yardim(client)
 	hYardim.ExitButton = false;
 	hYardim.Display(client, 20);
 }
-/* // ------------------------------                                            ------------------------------
-         ------------------------------ M E N U    S E C T I O N ------------------------------
-         ------------------------------                                            ------------------------------
+/* //------------------------------------------------------------------------------------------
+         ------------------------------------------------------------------------------------------
+         ------------------------------------------------------------------------------------------
 */
 
 
@@ -938,7 +1009,7 @@ public Action:yazi4(Handle:timer, any:id)
 {
 	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun hakkında bilgi için [!menu] yazabilirsiniz.");
 }
-/* // ------------------------------                                            ------------------------------
-         ------------------------------ A D V E R T    S E C T I O N ------------------------------
-         ------------------------------                                            ------------------------------
- */
+/* //------------------------------------------------------------------------------------------
+         ------------------------------------------------------------------------------------------
+         ------------------------------------------------------------------------------------------
+*/
