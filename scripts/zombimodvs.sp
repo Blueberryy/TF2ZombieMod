@@ -203,7 +203,7 @@ public OnPluginStart()
 	ServerCommand("mp_teams_unbalance_limit 0");
 	ServerCommand("mp_respawnwavetime 0 ");
 	ServerCommand("mp_disable_respawn_times 1 ");
-	//ServerCommand("sm_cvar mp_waitingforplayers_time 25");
+	ServerCommand("sm_cvar mp_waitingforplayers_time 25");
 	ServerCommand("sm_cvar tf_spy_invis_time 0.5"); // Locked 
 	ServerCommand("sm_cvar tf_spy_invis_unstealth_time 0.75"); // Locked 
 	ServerCommand("sm_cvar tf_spy_cloak_no_attack_time 1.0");
