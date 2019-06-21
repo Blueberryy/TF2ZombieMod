@@ -62,6 +62,7 @@ new g_iMapPrefixType = 0;
 new g_iChoosen[MAXPLAYERS];
 new clientRegenTime[MAXPLAYERS + 1];
 new MaxHealth[MAXPLAYERS + 1];
+new g_iSebep; //1 Disabled , 2 sadece zm (onlyzm)  
 //KvStrings
 //static String:KvValue[PLATFORM_MAX_PATH]; //For Next Update
 
@@ -94,28 +95,41 @@ public OnMapStart()
 	ClearTimer(g_hAdvert3);
 	ClearTimer(g_hAdvert4);
 	KillClientTimer(_, true);
-	if (GetConVarInt(zm_hOnlyZMaps) == 1) {
+	if (GetConVarInt(zm_enable) == 1 && GetConVarInt(zm_hOnlyZMaps) == 1) {
 		if (g_iMapPrefixType == 0) {
-			PrintToServer("\n\n[ZM]Sadece zombi maplerinde calismaya ayarlandı bu sebebple mod kapatildi.\n\n    \n\nTekrar Acmak icin:zm_onlyzm 0 yazabilirsiniz\n\n");
 			g_bEnabled = false;
+			PrintToServer("\n\n[ZM]Sadece zombi maplerinde calismaya ayarlandı bu sebebple mod kapatildi.\n\n    \n\nTekrar Acmak icin:zm_onlyzm 0 yazabilirsiniz\n\n");
+			g_iSebep = 2;
+			ZomEnableDisable();
+			
 		}
 		else if (g_iMapPrefixType > 0) {
 			g_bEnabled = true;
+			ZomEnableDisable();
 		}
 	}
-	else if (GetConVarInt(zm_hOnlyZMaps) == 0) {
+	else if (GetConVarInt(zm_enable) == 1 && GetConVarInt(zm_hOnlyZMaps) == 0) {
 		g_bEnabled = true;
 		if (g_iMapPrefixType > 0) {
 			g_bEnabled = true;
+			ZomEnableDisable();
+		}
+		else if (g_iMapPrefixType == 0) {
+			g_bEnabled = true;
+			ZomEnableDisable();
 		}
 	}
 	
 	if (GetConVarInt(zm_enable) == 0) {
 		g_bEnabled = false;
+		g_iSebep = 1;
+		ZomEnableDisable();
 	}
 	else if (GetConVarInt(zm_enable) == 1) {
 		g_bEnabled = true;
 	}
+	ZomEnableDisable();
+	/*
 	if (!g_bEnabled) {
 		PrintToServer("\n[ZM]Disabled\n");
 		UnhookEvent("teamplay_round_start", OnRound);
@@ -127,7 +141,9 @@ public OnMapStart()
 		UnhookEvent("post_inventory_application", Event_Resupply);
 		UnhookEvent("round_end", Event_RoundEnd);
 		UnhookEvent("teamplay_round_win", Event_RoundEnd);
+		PrintToServer("\n\n\n\n\n\nhooks are unenabled.\n\n\n\n\n");
 	}
+	*/
 }
 public OnMapEnd()
 {
@@ -166,9 +182,12 @@ public Action:ClassSelection(Handle:timer, any:id) {
 }
 public OnConfigsExecuted()
 {
-	for (new i = 1; i <= MaxClients; i++)
-	if (IsClientInGame(i) && g_bEnabled)
-		SDKHook(i, SDKHook_GetMaxHealth, OnGetMaxHealth);
+	if (g_bEnabled) {
+		for (new i = 1; i <= MaxClients; i++) {
+			if (IsClientInGame(i))
+				SDKHook(i, SDKHook_GetMaxHealth, OnGetMaxHealth);
+		}
+	}
 }
 public OnPluginStart()
 {
@@ -179,7 +198,7 @@ public OnPluginStart()
 	zm_tHazirliksuresi = CreateConVar("zm_setup", "30", "Setup suresi/Hazirlik Suresi", FCVAR_NOTIFY, true, 30.0, true, 70.0);
 	zm_tDalgasuresi = CreateConVar("zm_dalgasuresi", "225", "Setup bittikten sonraki round zamani", FCVAR_NOTIFY, true, 120.0, true, 300.0);
 	zm_hTekvurus = CreateConVar("zm_tekvurus", "0", "Zombiler tek vurusta insanlari infekte edebilsin (1/0) 0 kapatir.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	zm_hBossZombi = CreateConVar("zm_bosszombi", "1", "Boss zombi secimi aktif edilsin mi?(0/1)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	zm_hBossZombi = CreateConVar("zm_bosszombi", "0", "Boss zombi secimi aktif edilsin mi?(0/1)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	zm_hBossZombiInterval = CreateConVar("zm_bossinter", "20", "Boss kacinci saniye gelsin // Formul = Dalga Suresi - Boss Inter (225 - 60 = 165. saniyede)", FCVAR_NOTIFY, true, 20.0, true, 80.0);
 	zm_enable = CreateConVar("zm_enable", "1", "Zombi Modu Acilsin? Not:Birdahaki map degisiminde etkin olur. (0/1)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
 	zm_hOnlyZMaps = CreateConVar("zm_onlyzm", "1", "Zombi Modu sadece zombi haritalarinda olsun? (0/1)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
@@ -252,7 +271,7 @@ public HookPlayerHurt(Handle:event, const String:name[], bool:dontBroadcast)
 		return;
 	if (client > 0 && GetConVarInt(zm_hTekvurus) == 1)
 		if (client != attacker && attacker && TF2_GetPlayerClass(attacker) != TFClass_Scout && GetClientTeam(attacker) != 2 && GetClientTeam(attacker) != 1) {
-			zombi(client);
+		zombi(client);
 	}
 	if (GetConVarInt(zm_HealthRegenEnable) == 1 && client > 0 && !g_iChoosen[client] && clientRegenTime[client] == INVALID_HANDLE && GetClientTeam(client) == 3) {
 		clientRegenTime[client] = CreateTimer(GetConVarFloat(zm_HealthRegenTick), RegenTick, client, TIMER_REPEAT);
@@ -704,7 +723,7 @@ zombimod()
 		g_bOnlyZMaps = true;
 	else if (g_iMapPrefixType == 0) {
 		g_bOnlyZMaps = false;
-		PrintToServer("\n\n           ********WARNING!********     \n\n\n ***Zombie Map Recommended Current[MAP] = [%s]***\n\n\n", mapv);
+		PrintToServer("\n\n           ********WARNING!********     \n\n\n ***Zombie Map Recommended Current [MAPNAME] = [%s]***\n\n\n", mapv);
 	}
 }
 public Action:Timer_SetRoundTime(Handle:timer, any:ent1)
@@ -787,7 +806,25 @@ stock ClearTimer(&Handle:hTimer)
 		hTimer = INVALID_HANDLE;
 	}
 }
-
+ZomEnableDisable()
+{
+	if (!g_bEnabled) {
+		PrintToServer("\n[ZM]Disabled\n");
+		UnhookEvent("teamplay_round_start", OnRound);
+		UnhookEvent("player_death", OnPlayerDeath);
+		UnhookEvent("player_spawn", OnSpawn);
+		UnhookEvent("teamplay_setup_finished", OnSetup);
+		UnhookEvent("teamplay_point_captured", OnCaptured, EventHookMode_Post);
+		UnhookEvent("player_hurt", HookPlayerHurt);
+		UnhookEvent("post_inventory_application", Event_Resupply);
+		UnhookEvent("round_end", Event_RoundEnd);
+		UnhookEvent("teamplay_round_win", Event_RoundEnd);
+		if (g_iSebep == 1)
+			PrintToServer("\n\n\n                                      **********[ZM]Disabled**********\n\n\n");
+		else if (g_iSebep == 2)
+			PrintToServer("\n\n\n                                      **********[ZM]Only ZM Maps!**********\n\n\n");
+	}
+}
 
 
 
@@ -995,7 +1032,7 @@ Yardim(client)
  */
 public Action:yazi1(Handle:timer, any:id)
 {
-	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCHazırlık süresi 30(varsayılan) saniyedir.");
+	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCHazırlık süresi %02d:%02d (varsayılan) saniyedir.", GetConVarInt(zm_tHazirliksuresi) / 60, GetConVarInt(zm_tHazirliksuresi) % 60);
 }
 public Action:yazi2(Handle:timer, any:id)
 {
