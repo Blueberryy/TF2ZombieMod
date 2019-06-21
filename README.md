@@ -27,7 +27,5 @@ zm_hrtick
 New Map Link;
 https://gofile.io/?c=jEF1Ap
 
-/// You Shouldn't change the official values of the convars. (60 = setup, 225 = wave time) If it isn't necessesary.
+/// You Shouldn't change the official values of the convars. (30 = setup, 225 = wave time) If it isn't necessesary.
 
-
-/// You should edit your mapvote add-on for this gamemode. It kinda bugs the game when the mapvote is finished. (Edit the time when the mapvote starts.)
