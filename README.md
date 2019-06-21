@@ -10,6 +10,20 @@ zm_dalgasuresi
 
 zm_tekvurus
 
+zm_bosszombi
+
+zm_bossinter
+
+zm_enable
+
+zm_onlyzm
+
+zm_healthregen
+
+zm_hrmiktar
+
+zm_hrtick
+
 New Map Link;
 https://gofile.io/?c=jEF1Ap
 
