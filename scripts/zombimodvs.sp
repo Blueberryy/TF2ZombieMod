@@ -24,7 +24,7 @@
 
 #include <sourcemod>
 #include <sdktools>
-#include <tf2>
+//#include <tf2>
 #include <tf2_stocks>
 #include <sdkhooks>
 #include <clientprefs>
@@ -127,8 +127,8 @@ public OnMapStart()
 	}
 	else if (GetConVarInt(zm_enable) == 1) {
 		g_bEnabled = true;
+		ZomEnableDisable();
 	}
-	ZomEnableDisable();
 	/*
 	if (!g_bEnabled) {
 		PrintToServer("\n[ZM]Disabled\n");
@@ -158,10 +158,20 @@ public OnMapEnd()
 }
 public OnClientPutInServer(id)
 {
+	if (g_bOyun && g_bEnabled) {
+		ChangeClientTeam(id, 3);
+	}
 	SDKHook(id, SDKHook_OnTakeDamage, OnTakeDamage);
 	if (g_bEnabled) {
 		SDKHook(id, SDKHook_GetMaxHealth, OnGetMaxHealth);
 	}
+	if (id > 0 && IsValidClient(id) && IsClientInGame(id) && g_bOyun && TakimdakiOyuncular(3) > 0)
+	{
+		ChangeClientTeam(id, 3);
+		CreateTimer(1.0, ClassSelection, id, TIMER_FLAG_NO_MAPCHANGE);
+	}
+}
+OnClientAuthorized(id) {
 	if (id > 0 && IsValidClient(id) && IsClientInGame(id) && g_bOyun && TakimdakiOyuncular(3) > 0)
 	{
 		ChangeClientTeam(id, 3);
@@ -173,12 +183,15 @@ public OnClientDisconnect(client) {
 		KillClientTimer(client);
 }
 public Action:ClassSelection(Handle:timer, any:id) {
-	if (id > 0 && IsClientInGame(id) && ToplamOyuncular() > 0)
-		if (g_bEnabled)
-		ShowVGUIPanel(id, TF2_GetClientTeam(id) == TFTeam_Blue ? "class_blue" : "class_red");
-	else
-		if (g_bEnabled)
-		PrintToChat(id, "Lütfen [,] e basın!");
+	if (id > 0 && IsClientInGame(id) && ToplamOyuncular() > 0) {
+		if (g_bEnabled) {
+			ShowVGUIPanel(id, TF2_GetClientTeam(id) == TFTeam_Blue ? "class_blue" : "class_red");
+		}
+	} else {
+		if (g_bEnabled) {
+			PrintToChat(id, "Lütfen [,] e basın!");
+		}
+	}
 }
 public OnConfigsExecuted()
 {
@@ -242,7 +255,8 @@ public Action:OnGetMaxHealth(client, &maxhealth)
 	{
 		if (TF2_GetClientTeam(client) == TFTeam_Blue)
 		{
-			maxhealth = g_maxHealth[TF2_GetPlayerClass(client)] * 2;
+			maxhealth = 5000;
+			//maxhealth = g_maxHealth[TF2_GetPlayerClass(client)] * 999999;
 			MaxHealth[client] = maxhealth;
 			return Plugin_Handled;
 		}
@@ -819,10 +833,12 @@ ZomEnableDisable()
 		UnhookEvent("post_inventory_application", Event_Resupply);
 		UnhookEvent("round_end", Event_RoundEnd);
 		UnhookEvent("teamplay_round_win", Event_RoundEnd);
-		if (g_iSebep == 1)
-			PrintToServer("\n\n\n                                      **********[ZM]Disabled**********\n\n\n");
-		else if (g_iSebep == 2)
-			PrintToServer("\n\n\n                                      **********[ZM]Only ZM Maps!**********\n\n\n");
+		if (g_iSebep == 1) {
+			PrintToServer("\n\n\n                                      **********[ZM]Disabled -- S E B E P // R E A S O N**********\n\n\n");
+		}
+		else if (g_iSebep == 2) {
+			PrintToServer("\n\n\n                                      **********[ZM]Only ZM Maps! -- S E B E P // R E A S O N**********\n\n\n");
+		}
 	}
 }
 
