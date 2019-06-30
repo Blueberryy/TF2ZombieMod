@@ -255,8 +255,8 @@ public Action:OnGetMaxHealth(client, &maxhealth)
 	{
 		if (TF2_GetClientTeam(client) == TFTeam_Blue)
 		{
-			maxhealth = 5000;
-			//maxhealth = g_maxHealth[TF2_GetPlayerClass(client)] * 999999;
+			//maxhealth = 5000;
+			maxhealth = g_maxHealth[TF2_GetPlayerClass(client)] * 3;
 			MaxHealth[client] = maxhealth;
 			return Plugin_Handled;
 		}
