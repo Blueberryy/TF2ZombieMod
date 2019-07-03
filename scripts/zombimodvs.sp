@@ -98,7 +98,7 @@ public OnMapStart()
 	if (GetConVarInt(zm_enable) == 1 && GetConVarInt(zm_hOnlyZMaps) == 1) {
 		if (g_iMapPrefixType == 0) {
 			g_bEnabled = false;
-			PrintToServer("\n\n[ZM]Sadece zombi maplerinde calismaya ayarlandı bu sebebple mod kapatildi.\n\n    \n\nTekrar Acmak icin:zm_onlyzm 0 yazabilirsiniz\n\n");
+			PrintToServer("\n\n[ZM]Sadece zombi maplerinde calismaya ayarlandı bu sebebple mod kapatildi.\n\n    \n\nTekrar Acmak icin:zm_onlyzm 0 yazabilirsiniz\n\n  \n--\n Works only in z' prefixed maps for now.\n -- \n You can change this by editing zm_onlyzm 0\n'");
 			g_iSebep = 2;
 			ZomEnableDisable();
 			
@@ -189,7 +189,7 @@ public Action:ClassSelection(Handle:timer, any:id) {
 		}
 	} else {
 		if (g_bEnabled) {
-			PrintToChat(id, "Lütfen [,] e basın!");
+			PrintToChat(id, "Lütfen [,] e basın! -- Please press [,]!");
 		}
 	}
 }
@@ -208,16 +208,16 @@ public OnPluginStart()
 	RegConsoleCmd("sm_msc", msc);
 	RegConsoleCmd("sm_menu", zmenu);
 	//Convarlar
-	zm_tHazirliksuresi = CreateConVar("zm_setup", "30", "Setup suresi/Hazirlik Suresi", FCVAR_NOTIFY, true, 30.0, true, 70.0);
-	zm_tDalgasuresi = CreateConVar("zm_dalgasuresi", "225", "Setup bittikten sonraki round zamani", FCVAR_NOTIFY, true, 120.0, true, 300.0);
-	zm_hTekvurus = CreateConVar("zm_tekvurus", "0", "Zombiler tek vurusta insanlari infekte edebilsin (1/0) 0 kapatir.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	zm_hBossZombi = CreateConVar("zm_bosszombi", "0", "Boss zombi secimi aktif edilsin mi?(0/1)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	zm_hBossZombiInterval = CreateConVar("zm_bossinter", "20", "Boss kacinci saniye gelsin // Formul = Dalga Suresi - Boss Inter (225 - 60 = 165. saniyede)", FCVAR_NOTIFY, true, 20.0, true, 80.0);
-	zm_enable = CreateConVar("zm_enable", "1", "Zombi Modu Acilsin? Not:Birdahaki map degisiminde etkin olur. (0/1)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	zm_hOnlyZMaps = CreateConVar("zm_onlyzm", "1", "Zombi Modu sadece zombi haritalarinda olsun? (0/1)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	zm_HealthRegenEnable = CreateConVar("zm_healthregen", "1", "Health Regen olsun mu? Zombiler hasar yediginde(0/1)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-	zm_HealthRegenMiktar = CreateConVar("zm_hrmiktar", "20", "Her belirlenen saniyede kaç HP artsın? (Zombilerin)", FCVAR_NOTIFY, true, 10.0, true, 30.0);
-	zm_HealthRegenTick = CreateConVar("zm_hrtick", "3", "Kaç saniyede bir canı artsın?(Zombilerin)", FCVAR_NOTIFY, true, 3.0, true, 7.0);
+	zm_tHazirliksuresi = CreateConVar("zm_setup", "30", "Setup Timer/Hazirlik Suresi", FCVAR_NOTIFY, true, 30.0, true, 70.0);
+	zm_tDalgasuresi = CreateConVar("zm_dalgasuresi", "225", "Round Timer/Setup bittikten sonraki round zamani", FCVAR_NOTIFY, true, 120.0, true, 300.0);
+	zm_hTekvurus = CreateConVar("zm_tekvurus", "0", " 1 Damage to turn human to a zombie / Zombiler tek vurusta insanlari infekte edebilsin (1/0) 0 kapatir.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	zm_hBossZombi = CreateConVar("zm_bosszombi", "0", "Activate Boss Zombie Choosing System? /Boss zombi secimi aktif edilsin mi?(0/1)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	zm_hBossZombiInterval = CreateConVar("zm_bossinter", "20", "Boss Zombie Choosing Interval // Boss kacinci saniye gelsin // Formula = Dalga Suresi - Boss Inter (225 - 60 = 165. saniyede)", FCVAR_NOTIFY, true, 20.0, true, 80.0);
+	zm_enable = CreateConVar("zm_enable", "1", "Enable The Gamemode ? / Zombi Modu Acilsin? Not:Birdahaki map degisiminde etkin olur. (0/1)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	zm_hOnlyZMaps = CreateConVar("zm_onlyzm", "1", "Only In Z' prefixed maps / Zombi Modu sadece zombi haritalarinda olsun? (0/1)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	zm_HealthRegenEnable = CreateConVar("zm_healthregen", "1", "Activate Health Regen? / Health Regen olsun mu? Zombiler hasar yediginde(0/1)", FCVAR_NOTIFY, true, 0.0, true, 1.0);
+	zm_HealthRegenMiktar = CreateConVar("zm_hrmiktar", "20", "Amount of health to regen / Her belirlenen saniyede kaç HP artsın? (Zombilerin)", FCVAR_NOTIFY, true, 10.0, true, 30.0);
+	zm_HealthRegenTick = CreateConVar("zm_hrtick", "3", "Health Regen Interval/ Kaç saniyede bir canı artsın?(Zombilerin)", FCVAR_NOTIFY, true, 3.0, true, 7.0);
 	
 	//Olaylar
 	HookEvent("teamplay_round_start", OnRound);
@@ -365,7 +365,7 @@ public Action:hook_JoinClass(client, const String:command[], argc)
 {
 	if (g_bEnabled && client > 0 && client <= MaxClients && g_bOyun && GetClientTeam(client) == 2) //Round başladığı halde oyuncular takım değiştirmeye çalışırsa engellensin
 	{
-		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun esnasında sınıf değiştiremezsiniz!");
+		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCYou can't change class during round.'");
 		return Plugin_Handled; // Engellemeyi uygula
 	}
 	return Plugin_Continue; // Eğer öyle bir olay yoksa da plugin çalışmaya devam edicek.
@@ -373,7 +373,7 @@ public Action:hook_JoinClass(client, const String:command[], argc)
 public Action:OnSetup(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	zombimod(); //Round timerin işlemesi için
-	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCHazırlık bitti!");
+	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCIntermission over!");
 }
 public Action:OnRound(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -417,7 +417,7 @@ public Action:OnSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 			ChangeClientTeam(client, 2);
 			SetEntProp(client, Prop_Send, "m_lifeState", 0);
 			TF2_RespawnPlayer(client);
-			PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun Başlamadan Zombi Olamazsın!");
+			PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCYou can't become a zombie while intermission'!");
 		}
 		if (g_bOyun && g_iDalgaSuresi > 0 && g_iDalgaSuresi <= GetConVarInt(zm_tDalgasuresi))
 		{
@@ -454,7 +454,7 @@ public Action:OnSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 				{
 					TF2_SetPlayerClass(client, TFClass_Scout);
 					TF2_RespawnPlayer(client);
-					PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCEngineer limiti aşıldı(2), Hayatta olan Engi sayisi:%d", sinifsayisi(TFClass_Engineer));
+					PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCEngineer limit is reached(2), Living Engineers Count:%d", sinifsayisi(TFClass_Engineer));
 				}
 			}
 		}
@@ -482,8 +482,8 @@ public Action:hazirlik(Handle:timer, any:client)
 	if (g_iSetupCount <= GetConVarInt(zm_tHazirliksuresi) && g_iSetupCount > 0)
 	{
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Setup:%02d:%02d", g_iSetupCount / 60, g_iSetupCount % 60);
-		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "☠Zombi☠:%d", TakimdakiOyuncular(3));
-		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "Insan:%d", TakimdakiOyuncular(2));
+		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "☠Zombie☠:%d", TakimdakiOyuncular(3));
+		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "Humans:%d", TakimdakiOyuncular(2));
 		g_iDalgaSuresi = GetConVarInt(zm_tDalgasuresi);
 		g_bOyun = false;
 	} else {
@@ -506,14 +506,14 @@ public Action:oyun1(Handle:timer, any:id)
 	{
 		izleyicikontrolu();
 		HUD(-1.0, 0.2, 6.0, 255, 255, 0, 1, "Round:%02d:%02d", g_iDalgaSuresi / 60, g_iDalgaSuresi % 60);
-		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "☠Zombiler☠:%d", TakimdakiOyuncular(3));
-		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "İnsanlar:%d", TakimdakiOyuncular(2));
+		HUD(0.02, 0.10, 1.0, 0, 255, 0, 5, "☠Zombies☠:%d", TakimdakiOyuncular(3));
+		HUD(-0.02, 0.10, 1.0, 255, 255, 255, 6, "Humans:%d", TakimdakiOyuncular(2));
 		if (g_iDalgaSuresi == GetConVarInt(zm_tDalgasuresi) - 3) {
 			setuptime();
 		}
 		else if (g_iDalgaSuresi == GetConVarInt(zm_tDalgasuresi) - GetConVarInt(zm_hBossZombiInterval) && GetConVarInt(zm_hBossZombi) == 1) {
 			bosszombi(bosschoosing());
-			HUD(-1.0, 0.2, 6.0, 255, 0, 0, 2, "\n☠☠☠\nBoss Zombi Geldi:%N\n☠☠☠", g_iChoosen[id]);
+			HUD(-1.0, 0.2, 6.0, 255, 0, 0, 2, "\n☠☠☠\nBoss Zombie Came:%N\n☠☠☠", g_iChoosen[id]);
 		}
 		if (TakimdakiOyuncular(2) == 0) //2 red 3 blue
 		{

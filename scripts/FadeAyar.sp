@@ -2,8 +2,8 @@
 
 #define DEBUG
 
-#define PLUGIN_AUTHOR ""
-#define PLUGIN_VERSION "0.00"
+#define PLUGIN_AUTHOR "Devil"
+#define PLUGIN_VERSION "0.01"
 
 #define FFADE_IN            (0x0001)        // Just here so we don't pass 0 into the function
 #define FFADE_OUT           (0x0002)        // Fade out (not in)
@@ -50,7 +50,7 @@ public Action:spawn(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (GetClientTeam(client) == TFTeam_Blue) {
-		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCZombi Görüşünü Açmak için 'e' ye bas.");
+		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCPress 'e' to activate zombie vision");
 		SetClientOverlay(client, " ");
 	}
 	else if (GetClientTeam(client) == TFTeam_Red) {
