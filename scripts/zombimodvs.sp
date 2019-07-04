@@ -4,7 +4,7 @@
 #define DEBUG
 #define TIMER_FLAG_NO_MAPCHANGE (1<<1)   
 
-#define PLUGIN_AUTHOR "steamId=crackersarenoice"
+#define PLUGIN_AUTHOR "Devil"
 #define PLUGIN_VERSION "1.03"
 #define PLAYERBUILTOBJECT_ID_DISPENSER 0
 #define PLAYERBUILTOBJECT_ID_TELENT    1
@@ -248,6 +248,8 @@ public OnPluginStart()
 	//Directories
 	//CreateDirectory("/addons/sourcemod/data/zombiprops", 0, false, NULL_STRING);
 	//BuildPath(Path_SM, KvValue, sizeof(KvValue), "data/zombiprops/props.txt");
+	
+	LoadTranslations("tf2zombiemodvs.phrases");
 }
 public Action:OnGetMaxHealth(client, &maxhealth)
 {
@@ -356,7 +358,7 @@ public Action:BlockedCommandsteam(client, const String:command[], argc)
 {
 	if (g_bEnabled && ToplamOyuncular() > 0 && client > 0 && g_bOyun && GetClientTeam(client) > 1) //Round başladığı halde oyuncular takım değiştirmeye çalışırsa engellensin
 	{
-		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCOyun esnasında ya da setup zamanında takım değiştirilemez!");
+		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCC %t", "Players Cant Change Team Setup");
 		return Plugin_Handled; // Engellemeyi uygula
 	}
 	return Plugin_Continue; // Eğer öyle bir olay yoksa da plugin çalışmaya devam edicek.
@@ -365,7 +367,7 @@ public Action:hook_JoinClass(client, const String:command[], argc)
 {
 	if (g_bEnabled && client > 0 && client <= MaxClients && g_bOyun && GetClientTeam(client) == 2) //Round başladığı halde oyuncular takım değiştirmeye çalışırsa engellensin
 	{
-		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCYou can't change class during round.'");
+		PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCC %t", "Players Cant Change Class Round");
 		return Plugin_Handled; // Engellemeyi uygula
 	}
 	return Plugin_Continue; // Eğer öyle bir olay yoksa da plugin çalışmaya devam edicek.
@@ -373,7 +375,7 @@ public Action:hook_JoinClass(client, const String:command[], argc)
 public Action:OnSetup(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	zombimod(); //Round timerin işlemesi için
-	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCIntermission over!");
+	PrintToChatAll("\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCC %t", "Intermission Over");
 }
 public Action:OnRound(Handle:event, const String:name[], bool:dontBroadcast)
 {
@@ -417,7 +419,7 @@ public Action:OnSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 			ChangeClientTeam(client, 2);
 			SetEntProp(client, Prop_Send, "m_lifeState", 0);
 			TF2_RespawnPlayer(client);
-			PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCYou can't become a zombie while intermission'!");
+			PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCC %t", "Player Cant Become Zombie Intermission");
 		}
 		if (g_bOyun && g_iDalgaSuresi > 0 && g_iDalgaSuresi <= GetConVarInt(zm_tDalgasuresi))
 		{
@@ -454,7 +456,7 @@ public Action:OnSpawn(Handle:event, const String:name[], bool:dontBroadcast)
 				{
 					TF2_SetPlayerClass(client, TFClass_Scout);
 					TF2_RespawnPlayer(client);
-					PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCCEngineer limit is reached(2), Living Engineers Count:%d", sinifsayisi(TFClass_Engineer));
+					PrintToChat(client, "\x07696969[ \x07A9A9A9ZF \x07696969]\x07CCCCCC Limit%d %t", "Engineer Limit Is Reached", sinifsayisi(TFClass_Engineer));
 				}
 			}
 		}
@@ -764,6 +766,14 @@ public Action:res(Handle:timer, any:id)
 			ChangeClientTeam(i, 2);
 			SetEntProp(i, Prop_Send, "m_lifeState", 0);
 			TF2_RespawnPlayer(i);
+		}
+	}
+}
+TF2_OnWaitingForPlayersStart()
+{
+	for (new i = 1; i <= MaxClients; i++) {
+		if (IsClientInGame(i) && IsValidClient(i) && TF2_GetClientTeam(i) == TFTeam_Blue) {
+			ChangeClientTeam(i, 3);
 		}
 	}
 }
