@@ -129,21 +129,6 @@ public OnMapStart()
 		g_bEnabled = true;
 		ZomEnableDisable();
 	}
-	/*
-	if (!g_bEnabled) {
-		PrintToServer("\n[ZM]Disabled\n");
-		UnhookEvent("teamplay_round_start", OnRound);
-		UnhookEvent("player_death", OnPlayerDeath);
-		UnhookEvent("player_spawn", OnSpawn);
-		UnhookEvent("teamplay_setup_finished", OnSetup);
-		UnhookEvent("teamplay_point_captured", OnCaptured, EventHookMode_Post);
-		UnhookEvent("player_hurt", HookPlayerHurt);
-		UnhookEvent("post_inventory_application", Event_Resupply);
-		UnhookEvent("round_end", Event_RoundEnd);
-		UnhookEvent("teamplay_round_win", Event_RoundEnd);
-		PrintToServer("\n\n\n\n\n\nhooks are unenabled.\n\n\n\n\n");
-	}
-	*/
 }
 public OnMapEnd()
 {
@@ -773,7 +758,7 @@ TF2_OnWaitingForPlayersStart()
 {
 	for (new i = 1; i <= MaxClients; i++) {
 		if (IsClientInGame(i) && IsValidClient(i) && TF2_GetClientTeam(i) == TFTeam_Blue) {
-			ChangeClientTeam(i, 3);
+			ChangeClientTeam(i, 2);
 		}
 	}
 }
@@ -834,15 +819,15 @@ ZomEnableDisable()
 {
 	if (!g_bEnabled) {
 		PrintToServer("\n[ZM]Disabled\n");
-		UnhookEvent("teamplay_round_start", OnRound);
-		UnhookEvent("player_death", OnPlayerDeath);
-		UnhookEvent("player_spawn", OnSpawn);
-		UnhookEvent("teamplay_setup_finished", OnSetup);
-		UnhookEvent("teamplay_point_captured", OnCaptured, EventHookMode_Post);
-		UnhookEvent("player_hurt", HookPlayerHurt);
-		UnhookEvent("post_inventory_application", Event_Resupply);
-		UnhookEvent("round_end", Event_RoundEnd);
-		UnhookEvent("teamplay_round_win", Event_RoundEnd);
+		//UnhookEvent("teamplay_round_start", OnRound);
+		//UnhookEvent("player_death", OnPlayerDeath);
+		//UnhookEvent("player_spawn", OnSpawn);
+		//UnhookEvent("teamplay_setup_finished", OnSetup);
+		//UnhookEvent("teamplay_point_captured", OnCaptured, EventHookMode_Post);
+		//UnhookEvent("player_hurt", HookPlayerHurt);
+		//UnhookEvent("post_inventory_application", Event_Resupply);
+		//UnhookEvent("round_end", Event_RoundEnd);
+		//UnhookEvent("teamplay_round_win", Event_RoundEnd);
 		if (g_iSebep == 1) {
 			PrintToServer("\n\n\n                                      **********[ZM]Disabled -- S E B E P // R E A S O N**********\n\n\n");
 		}
